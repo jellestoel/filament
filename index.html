@@ -399,13 +399,14 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
         <li>ABS-GF, PA6-GF, PPA-CF, PC FR, ASA Aero, and PETG Matte use their own data sheets, not the guide. PPA-CF bars were printed without baking in a 52 °C chamber. ASA Aero values may change with foaming, and PETG Matte's sheet doesn't say if its impact values are notched.</li>
         <li>PPS-CF is left out because it needs 310 to 340 °C, above the X2D's 300 °C limit. TPU 75A is left out because it's 2.85 mm and the X2D uses 1.75 mm.</li>
         <li>The heat filter is a first screen. It checks HDT at 0.45 MPa plus a 10 °C margin, so it doesn't prove a part can hold a load at that heat for long.</li>
+        <li>Bend range divides bending strength by stiffness. High is 4% or more, Medium is 3% to 4%, and Low is under 3%. It's only a rough group, because bending strength isn't the point where a part stops springing back. Within a group, the list sorts by toughness.</li>
         <li>Spring back is my judgment for clips and snap fits, based on general material behavior. Stretch before break alone doesn't show that a part springs back, so test your part, because repeated bending can still fatigue it.</li>
         <li>Stretch before break comes from Bambu's data sheets, and TPU bars are cut off because they pass 650%.</li>
         <li>Ease, sag resistance, accuracy and fit, warp resistance, and surface are my 1 to 5 estimates from general material behavior on an enclosed printer, where 5 is best. They aren't lab data, so print a test for parts that must fit.</li>
         <li>Fume risk is my rough 1 to 5 estimate of print emissions, where 1 is lowest. It leans on limited studies and base polymers, and it isn't a medical or safety rating. Brand, color, and nozzle temperature all change emissions.</li>
         <li>UV resistance is a 1 to 5 estimate from outdoor material guides. In the sun needs 5, and partial shade needs at least 3. With no sun exposure selected, UV rules nothing out. Color, grade, and climate all change the result, and stabilized PC or nylon can last much longer.</li>
         <li>Overhang and bridging are the limits listed on Bambu's data sheets, not a side-by-side test, so small differences may not hold on real prints.</li>
-        <li>Cost bands are rounded euros per kg before shipping, for a single 1 kg roll without sales or bulk discounts. They were checked against regular EU shop prices in November 2026. PLA Tough+ uses Bambu's own list price of €23.99, which is lower than the shops found. Plain TPU 95A uses the 95A HF price as a proxy. PPA-CF comes on a 750 g roll, so its price is scaled to 1 kg. PETG Matte uses PETG Basic's band, because a US source lists them at the same price. TPU for AMS prices varied a lot, so its band is a middle estimate. PLA Silk Dual is also an estimate, because the only price found came from a shop that ran high on other filaments. Prices vary by shop.</li>
+        <li>Cost bands are rounded euros per kg before shipping, for a single 1 kg roll without sales or bulk discounts. PLA Basic, PLA Matte, PLA Silk+, PLA Tough+, ASA, ABS-GF, PETG-CF, PC, PA6-GF, and TPU 95A HF use Bambu's own list price, which is often lower than shops. The rest come from regular EU shop prices. All were checked in November 2026. Plain TPU 95A uses the 95A HF price as a proxy. PPA-CF comes on a 750 g roll, so its price is scaled to 1 kg. PETG Matte uses PETG Basic's band, because a US source lists them at the same price. TPU for AMS prices varied a lot, so its band is a middle estimate. PLA Silk Dual is also an estimate, because the only price found came from a shop that ran high on other filaments. Prices vary by shop.</li>
         <li>Bed ranges are for textured PEI on base grades. PLA variants use the range from their own data sheets.</li>
         <li>Color can shift these numbers, especially on specialty colors, so treat each row as typical for that product.</li>
         <li>After getting wet notes are general guidance, except the nylon warning, which comes from Bambu's drying guide.</li>
@@ -524,7 +525,7 @@ const TPUS = [
   { ...TPU, id: "tpu-85a", name: "TPU 85A", kind: "Very soft flexible, Shore 85A", tough: 124.3, layer: 88.5, water: 0.67, temp: "200 to 250 °C", bed: "30 to 35 °C", speed: "Under 200 mm/s", nozzle: "0.6 mm or larger", noAms: true, why: "The softest here, for parts that should feel rubbery. It's the hardest to print, and Bambu warns against using Unload, so follow its unloading steps.", air: "Not compared in the studies used here. Ventilate the room while printing." }
 ];
 
-const COST = { "tpu-hf": 3, "tpu-ams": 3, "tpu-90a": 3, "tpu-85a": 3, pla: 1, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 2, "pla-metal": 2, "pla-tough": 1, petg: 1, abs: 1, asa: 2, "pla-cf": 2, "petg-cf": 3, "asa-cf": 3, pc: 3, tpu: 3, "pa6-cf": 4, "pet-cf": 4, "paht-cf": 4, "abs-gf": 2, "pa6-gf": 4, "ppa-cf": 4, "pc-fr": 4, "asa-aero": 4, "petg-matte": 1 };
+const COST = { "tpu-hf": 2, "tpu-ams": 3, "tpu-90a": 3, "tpu-85a": 3, pla: 1, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 2, "pla-metal": 2, "pla-tough": 1, petg: 1, abs: 1, asa: 1, "pla-cf": 2, "petg-cf": 2, "asa-cf": 3, pc: 3, tpu: 2, "pa6-cf": 4, "pet-cf": 4, "paht-cf": 4, "abs-gf": 2, "pa6-gf": 4, "ppa-cf": 4, "pc-fr": 4, "asa-aero": 4, "petg-matte": 1 };
 const COST_BAND = { 1: "<€25/kg", 2: "€25–35/kg", 3: "€35–50/kg", 4: ">€50/kg" };
 MATERIALS.concat(TPUS).forEach((m) => { m.cost = COST[m.id]; });
 const OVERHANG = { "tpu-hf": 55, "tpu-ams": 70, "tpu-90a": 40, "tpu-85a": 40, pla: 55, "pla-cf": 55, "pla-matte": 55, "pla-silk": 55, "pla-silk-dual": 55, "pla-metal": 55, "pla-tough": 55, petg: 70, "petg-cf": 70, abs: 70, asa: 70, "asa-cf": 70, pc: 70, "pet-cf": 70, "paht-cf": 70, "pa6-cf": 70, tpu: 70, "abs-gf": 70, "pa6-gf": 70, "ppa-cf": 70, "pc-fr": 70, "asa-aero": 70, "petg-matte": 70 };
@@ -583,9 +584,17 @@ const STRETCH = { "tpu-hf": 650, "tpu-ams": 650, "tpu-90a": 650, "tpu-85a": 700,
 MATERIALS.concat(TPUS).forEach((m) => { m.stretch = STRETCH[m.id]; });
 const SAG = { "pet-cf": 5, "paht-cf": 5, "asa-cf": 5, pc: 5, "petg-cf": 4, abs: 4, asa: 4, "pa6-cf": 4, petg: 3, "pla-cf": 3, "tpu-ams": 3, pla: 2, "pla-tough": 2, "pla-metal": 2, tpu: 2, "tpu-hf": 2, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 1, "tpu-90a": 1, "tpu-85a": 1, "abs-gf": 5, "pa6-gf": 4, "ppa-cf": 5, "pc-fr": 5, "asa-aero": 2, "petg-matte": 3 };
 const MIN_SAG = 3;
+const BEND_GROUP = { 1: "Low", 2: "Medium", 3: "High" };
+const bendGroup = (m) => {
+  if (m.str === null || m.stiff === null) return null;
+  const ratio = m.str / m.stiff;
+  return ratio >= 0.04 ? 3 : ratio >= 0.03 ? 2 : 1;
+};
+MATERIALS.concat(TPUS).forEach((m) => { m.bend = bendGroup(m); });
 MATERIALS.concat(TPUS).forEach((m) => { m.sag = SAG[m.id]; });
 const COLS = PROPS.concat([
   { id: "stretch", name: "Stretch before break", unit: "%", most: "stretchiest", max: 35 },
+  { id: "bend", name: "Bend range", unit: "calculated group", most: "widest bend range", max: 3, scale: true },
   { id: "sag", name: "Sag resistance", unit: "of 5, est.", most: "most sag resistant", max: 5, scale: true },
   { id: "cost", name: "Cost", unit: "€/kg", most: "cheapest", max: 4, low: true, scale: true },
   { id: "ease", name: "Ease", unit: "of 5, est.", most: "easiest to print", max: 5, scale: true },
@@ -599,7 +608,7 @@ const COLS = PROPS.concat([
   { id: "water", name: "Water uptake", unit: "%", most: "lowest water uptake", max: 2.5, low: true },
   { id: "speedMax", name: "Listed max speed", unit: "mm/s", most: "fastest", max: 300 }
 ]);
-const COL_ORDER = ["stiff", "str", "tough", "layer", "stretch", "sag", "hdt", "uvr", "water", "accuracy", "warp", "surface", "overhang", "bridge", "ease", "speedMax", "cost", "fume"];
+const COL_ORDER = ["stiff", "str", "tough", "layer", "stretch", "bend", "sag", "hdt", "uvr", "water", "accuracy", "warp", "surface", "overhang", "bridge", "ease", "speedMax", "cost", "fume"];
 COLS.sort((a, b) => COL_ORDER.indexOf(a.id) - COL_ORDER.indexOf(b.id));
 const COL_GROUP = { stiff: "Mechanical", hdt: "Environment", accuracy: "Print quality", ease: "Practical" };
 const groupRow = (name) => '<div class="vs-group">' + name + "</div>";
@@ -610,6 +619,7 @@ const COL_TIPS = {
   layer: "How well the layers resist splitting on impact. Measured as Z impact strength, so slow pulling across layers can behave differently.",
   hdt: "Temperature where it starts to deform under a light load. Measured as HDT at 0.45 MPa on dried, annealed test bars.",
   stretch: "How far a test bar stretches before it breaks, measured as XY elongation at break. It doesn't prove a part springs back.",
+  bend: "How far it can bend before lasting damage, in rough groups. It's calculated from strength and stiffness, so it's a guide and not a safe limit. It doesn't cover repeated bending or months under load, and it doesn't show if a material is brittle.",
   sag: "How well it resists slowly bending under a constant load over months, where 5 is best. This is my estimate, not lab data.",
   cost: "Rough price per kg, from under €25 to over €50.",
   ease: "How forgiving it is to print. This is my estimate, not lab data.",
@@ -631,10 +641,11 @@ function rankCmp(col) {
     const va = a[col.id], vb = b[col.id];
     if (va === null) return vb === null ? 0 : 1;
     if (vb === null) return -1;
-    return col.low ? va - vb : vb - va;
+    const gap = col.low ? va - vb : vb - va;
+    return gap || (col.id === "bend" ? b.tough - a.tough : 0);
   };
 }
-const state = { mode: "any", place: "any", temp: 40, rank: "stiff", styrene: false, nodry: false, noanneal: false, creep: false, damp: false, selected: null, cmp: [], view: "rank", units: "real", showOut: false, panelOpen: false, spring: false, maxCost: 5, cols: ["stiff", "str", "tough", "layer", "hdt"] };
+const state = { mode: "any", place: "any", temp: 40, rank: "ease", styrene: false, nodry: false, noanneal: false, creep: false, damp: false, selected: null, cmp: [], view: "rank", units: "real", showOut: false, panelOpen: false, spring: false, maxCost: 5, cols: ["stiff", "str", "tough", "layer", "hdt", "ease", "cost"] };
 const MARGIN = 10;
 const NO_HEAT_LIMIT = 40;
 const $ = (id) => document.getElementById(id);
@@ -702,6 +713,7 @@ function valueText(m, p, s) {
   const v = m[p.id];
   if (v === null) return null;
   if (p.id === "cost") return COST_BAND[v];
+  if (p.id === "bend") return BEND_GROUP[v];
   if (p.id === "stretch" && v >= 650) return ">" + v + " %";
   if (!isPlain(p, s)) return v + " " + p.unit;
   const ref = plainRef(p);
@@ -797,7 +809,7 @@ function renderTable(res, s) {
   }));
   const sideways = $("table").scrollWidth > $("table").clientWidth + 1 ? " Scroll the table sideways to see every column." : "";
   $("sheet-note").textContent = (sideways ? sideways.trim() + " " : "") + (s.mode !== "flex"
-    ? "Select a row for print settings." + (s.temp > NO_HEAT_LIMIT ? " The amber line on each heat bar marks " + (s.temp + MARGIN) + " °C, your limit plus a " + MARGIN + " °C margin." : "") + (wideScale(s) ? " Toughness and layer bars use a wider scale here, to fit TPU." : "")
+    ? "Select a row for print settings." + (s.temp > NO_HEAT_LIMIT ? " The amber line on each heat bar marks " + (s.temp + MARGIN) + " °C, your limit plus a " + MARGIN + " °C margin." : "") + (wideScale(s) ? " Toughness and layer bars use a wider scale here, to fit TPU." : "") + (s.spring ? " Bend range is a rough group, so test real clips. TPU for AMS has no bend data, but it does spring back." : "")
     : "Sun, heat, load, and damp filters don't apply here, because TPU has no comparable data for them. Toughness and layer bars use a wider scale to fit TPU.");
 }
 
@@ -834,6 +846,7 @@ function deltaText(p, value, base) {
   if (p.id === "stretch" && Math.max(value, base) >= 650) return { text: value > base ? "Far higher" : "Far lower", won: value > base };
   if (isClose(p, value, base)) return { text: p.scale || p.exact ? "Same" : "About even", won: false };
   if (p.id === "cost") return { text: value > base ? "Pricier" : "Cheaper", won: value < base };
+  if (p.id === "bend") return { text: value > base ? "Higher" : "Lower", won: value > base };
   const sign = value > base ? "+" : "−";
   const gap = Math.abs(value - base);
   const size = p.id === "hdt" ? gap + " °C" : p.scale ? String(gap) : p.exact ? gap + " " + p.unit : Math.round(gap / base * 100) + "%";
@@ -1030,14 +1043,14 @@ $("views").addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b) return;
   state.view = b.dataset.v; render();
 });
+const MODE_RANK = { rigid: "stiff", spring: "bend", flex: "ease" };
 $("mode").addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b) return;
   const active = state.spring ? "spring" : state.mode;
   const next = b.dataset.v === active ? "any" : b.dataset.v;
   state.spring = next === "spring";
   state.mode = state.spring ? "rigid" : next;
-  if (state.spring) state.rank = "tough";
-  if (state.mode === "flex" && TPUS.every((m) => m[state.rank] === null)) state.rank = "tough";
+  if (MODE_RANK[next]) state.rank = MODE_RANK[next];
   if (!state.cols.includes(state.rank)) state.cols = state.cols.concat(state.rank);
   state.selected = null; render();
 });
