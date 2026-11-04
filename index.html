@@ -303,7 +303,7 @@ html:not(.kbd) :focus { outline: none; }
       <button type="button" class="panel-toggle" id="panel-toggle" aria-expanded="false" aria-controls="panel-body"><b id="panel-summary"></b><span id="panel-action">Change</span></button>
       <div class="panel-body" id="panel-body">
       <fieldset class="group">
-        <legend>What should the part do?</legend>
+        <legend>How should the material behave?</legend>
         <div class="seg" id="mode">
           <button type="button" id="mode-any" data-v="any">Any</button>
           <button type="button" id="mode-rigid" data-v="rigid">Rigid</button>
@@ -831,6 +831,7 @@ function renderTable(res, s) {
   $("table").style.setProperty("--table-w", $("table").clientWidth + "px");
   $("table").innerHTML = (res.pass.length || showOut ? head : "") + pass + toggle + out;
   $("table").querySelectorAll("[data-id]").forEach((row) => row.addEventListener("click", () => {
+    if (String(getSelection())) return;
     state.selected = state.selected === row.dataset.id ? null : row.dataset.id;
     render();
     const again = $("sel-" + row.dataset.id);
@@ -1055,6 +1056,7 @@ $("table").addEventListener("mouseover", (e) => {
   if (b) showHeadTip(b); else $("head-tip").hidden = true;
 });
 $("table").addEventListener("focusin", (e) => { const b = e.target.closest("[data-rank]"); if (b) showHeadTip(b); });
+$("table").addEventListener("mousedown", (e) => { if (e.detail > 1 && e.target.closest(".row") && !e.target.closest(".detail")) e.preventDefault(); });
 $("table").addEventListener("mouseleave", () => { $("head-tip").hidden = true; });
 $("table").addEventListener("focusout", () => { $("head-tip").hidden = true; });
 function showColTip(b) {
@@ -1098,9 +1100,9 @@ $("views").addEventListener("click", (e) => {
 });
 const MODE_HINT = {
   any: "Rigid holds its shape. Spring back bends and returns. Rubbery squashes or grips.",
-  rigid: "Holds its shape, like brackets, jigs, and mounts.",
-  spring: "Bends and returns, like clips, latches, and snap fits.",
-  flex: "Squashes or grips, like feet, bumpers, and gaskets."
+  rigid: "Holds its shape. Good for brackets, jigs, and mounts.",
+  spring: "Bends and returns. Good for clips, latches, and snap fits.",
+  flex: "Squashes or grips. Good for feet, bumpers, and gaskets."
 };
 const MODE_RANK = { rigid: "stiff", spring: "bend", flex: "ease" };
 $("mode").addEventListener("click", (e) => {
