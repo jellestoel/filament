@@ -162,6 +162,7 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
 .col-tip {
   position: absolute; z-index: 5; width: min(320px, 100%); padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: 4px;
   background: var(--sheet); color: var(--ink); font-size: 12.5px; line-height: 1.4;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.18); pointer-events: none;
 }
 .col-toggle { display: none; justify-self: start; padding: 6px 10px; border: 1px solid var(--line); border-radius: 4px; background: transparent; font-size: 13.5px; font-weight: 600; color: var(--ink); }
 .fam { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -215,7 +216,8 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
   background: var(--plate); font-size: 13px; font-weight: 600; color: var(--muted); text-align: left;
 }
 
-.versus { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 20px; background: var(--sheet); border: 1px solid var(--line); border-radius: 6px; }
+.vs-label[data-tip] { cursor: help; }
+.versus { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 20px; background: var(--sheet); border: 1px solid var(--line); border-radius: 6px; }
 .versus h3 { margin: 0; font: 600 1.25rem/1.2 var(--font-display); }
 .vs-pick { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: start; }
 .vs-slot { display: grid; gap: 5px; min-width: 0; }
@@ -431,6 +433,7 @@ html:not(.kbd) :focus { outline: none; }
         <button type="button" class="vs-swap" id="cmp-more">Add a material</button>
         <p class="vs-summary" id="vs-summary" aria-live="polite"></p>
         <div class="vs-grid" id="vs-grid"></div>
+        <div class="col-tip" id="vs-tip" role="tooltip" hidden></div>
         <p class="hint" id="vs-hint"></p>
       </section>
 
@@ -998,7 +1001,7 @@ function renderCompare(res, s) {
       const delta = i === 0 ? { text: "Baseline", won: false } : deltaText(p, v, base[p.id]);
       return '<div class="vs-side' + (leaders.includes(m) ? " lead" : "") + '">' + nameTag(m) + '<span class="vs-val">' + (valueText(m, p, s) ?? (p.missing || "Not published")) + '</span><span class="bar lg" aria-hidden="true"><i style="width:' + (v === null ? 0 : pct(v)) + '%"></i>' + tick + '</span><span class="vs-delta' + (delta.won ? " won" : "") + '">' + delta.text + "</span></div>";
     }).join("");
-    return (COL_GROUP[p.id] ? groupRow(COL_GROUP[p.id]) : "") + '<div class="vs-row"><span class="vs-label">' + p.name + (p.low ? "<small>Lower is better</small>" : "") + "</span>" + sides + "</div>";
+    return (COL_GROUP[p.id] ? groupRow(COL_GROUP[p.id]) : "") + '<div class="vs-row"><span class="vs-label" data-tip="' + p.id + '">' + p.name + (p.low ? "<small>Lower is better</small>" : "") + "</span>" + sides + "</div>";
   }).join("");
   const facts = [
     ["Nozzle", (m) => m.nozzle],
@@ -1196,7 +1199,19 @@ $("units").addEventListener("click", (e) => {
 $("panel").addEventListener("submit", (e) => e.preventDefault());
 document.addEventListener("keydown", (e) => { if (e.key === "Tab") document.documentElement.classList.add("kbd"); });
 document.addEventListener("pointerdown", () => document.documentElement.classList.remove("kbd"));
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") { $("col-tip").hidden = true; $("head-tip").hidden = true; } });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { $("col-tip").hidden = true; $("head-tip").hidden = true; $("vs-tip").hidden = true; } });
+$("vs-grid").addEventListener("mouseover", (e) => {
+  const b = e.target.closest("[data-tip]"), tip = $("vs-tip");
+  if (!b) { tip.hidden = true; return; }
+  const text = document.createRange();
+  text.selectNodeContents(b);
+  const box = $("versus").getBoundingClientRect(), r = text.getBoundingClientRect();
+  tip.textContent = COL_TIPS[b.dataset.tip];
+  tip.hidden = false;
+  tip.style.top = r.bottom - box.top + 5 + "px";
+  tip.style.left = Math.max(0, Math.min(r.left - box.left, box.width - tip.offsetWidth)) + "px";
+});
+$("vs-grid").addEventListener("mouseleave", () => { $("vs-tip").hidden = true; });
 document.documentElement.lang = "en";
 $("panel-toggle").addEventListener("click", () => { state.panelOpen = !state.panelOpen; render(); });
 $("views").addEventListener("click", (e) => {
