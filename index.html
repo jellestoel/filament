@@ -1,0 +1,1014 @@
+<title>Bambu Filament Picker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Saira+Semi+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: a printer control panel on the left, a filament spec sheet on the right. Bars read as extruded beads with layer seams. */
+:root {
+  --plate: #e7ebec;
+  --sheet: #f7f9f9;
+  --ink: #16222c;
+  --muted: #52616d;
+  --line: #c9d2d7;
+  --line-strong: #7f909c;
+  --m1: #a4610a;
+  --m2: #0b7a75;
+  --m3: #b3246f;
+  --m4: #5a3fc0;
+  --m5: #b3261e;
+  --m6: #47730f;
+  --track: #d9e0e3;
+  --bead: #6d7f8c;
+  --bead-off: #aab6bd;
+  --accent: #1d49c9;
+  --accent-soft: #dfe7fb;
+  --heat: #a4610a;
+  --warn: #a33b12;
+  --warn-soft: #f8e4da;
+  --on-accent: #ffffff;
+  --font-display: "Saira Semi Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --plate: #10171d; --sheet: #19232b; --ink: #e8eef1; --muted: #9dacb7; --line: #33424e; --line-strong: #6f8291; --m1: #e5ad52; --m2: #4fd1c5; --m3: #f27ab5; --m4: #b9a2ff; --m5: #ff8f85; --m6: #a6d96a;
+    --track: #2a3742; --bead: #8fa2b0; --bead-off: #55667a; --accent: #86a8ff; --accent-soft: #22325c;
+    --heat: #e5ad52; --warn: #f39b73; --warn-soft: #43261b; --on-accent: #0f1a33; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --plate: #10171d; --sheet: #19232b; --ink: #e8eef1; --muted: #9dacb7; --line: #33424e; --line-strong: #6f8291; --m1: #e5ad52; --m2: #4fd1c5; --m3: #f27ab5; --m4: #b9a2ff; --m5: #ff8f85; --m6: #a6d96a;
+  --track: #2a3742; --bead: #8fa2b0; --bead-off: #55667a; --accent: #86a8ff; --accent-soft: #22325c;
+  --heat: #e5ad52; --warn: #f39b73; --warn-soft: #43261b; --on-accent: #0f1a33; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--plate); color: var(--ink); font: 400 15px/1.5 var(--font-body); }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+a { color: var(--accent); text-underline-offset: 2px; }
+
+.wrap {
+  max-width: 1640px; margin-inline: auto; padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 24px;
+}
+.machine { margin: 0; font: 400 12px/1.4 var(--font-data); color: var(--muted); }
+h1 {
+  margin: 4px 0 6px; font: 700 clamp(2.2rem, 6vw, 3.6rem)/1 var(--font-display);
+  letter-spacing: -0.01em; text-wrap: balance;
+}
+.lede { margin: 0; max-width: 62ch; color: var(--muted); font-size: 1.03rem; }
+
+.layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 28px; align-items: start; }
+.panel {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px);
+  display: grid; gap: 20px; padding: 18px; background: var(--sheet); border: 1px solid var(--line); border-radius: 6px;
+}
+.group { display: grid; gap: 8px; border: 0; margin: 0; padding: 0; min-width: 0; }
+.group legend, .label {
+  padding: 0; font: 600 13px/1.3 var(--font-body); color: var(--ink);
+}
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; padding: 2px; background: var(--track); border-radius: 5px; }
+.seg.stack { grid-auto-flow: row; }
+.seg button {
+  border: 0; background: transparent; padding: 7px 8px; border-radius: 4px; font-size: 13.5px; color: var(--ink); text-align: center;
+}
+.seg.stack button { text-align: left; display: flex; justify-content: space-between; gap: 8px; }
+.seg button small { font: 400 11.5px var(--font-data); color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.seg button[aria-pressed="true"] small { color: var(--on-accent); }
+#mode, #place { grid-auto-columns: auto; }
+#mode button, #place button { padding-inline: 5px; font-size: 13px; white-space: nowrap; }
+
+.temp-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.temp-head output { font: 500 20px/1 var(--font-data); color: var(--heat); }
+.temp-head output.off { font: 400 13px/1.4 var(--font-body); color: var(--muted); }
+input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.presets button {
+  border: 1px solid var(--line); background: transparent; border-radius: 4px; padding: 3px 8px; font-size: 12.5px; color: var(--muted);
+}
+.hint { margin: 0; font-size: 12.5px; line-height: 1.4; color: var(--muted); }
+
+.check { display: grid; grid-template-columns: 18px 1fr; gap: 8px; align-items: start; font-size: 13.5px; line-height: 1.35; cursor: pointer; }
+.check input { margin: 1px 0 0; width: 16px; height: 16px; accent-color: var(--accent); }
+.check small { display: block; font-size: 12.5px; color: var(--muted); }
+
+.panel-body { display: grid; gap: 20px; min-width: 0; }
+.panel-toggle {
+  display: none; width: 100%; justify-content: space-between; align-items: baseline; gap: 12px; padding: 0; border: 0; background: transparent; text-align: left; font-size: 13.5px;
+}
+.panel-toggle b { font-weight: 600; }
+.panel-toggle span { color: var(--accent); white-space: nowrap; }
+
+.results { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; }
+.results > * { min-width: 0; }
+.topbar { display: flex; flex-wrap: wrap; gap: 8px; }
+.topbar .views { flex: 1 1 320px; position: relative; }
+.units { flex: 0 1 auto; }
+.units button { padding: 9px 12px; font-size: 13.5px; white-space: nowrap; }
+.views button { padding: 9px 10px; font-size: 14.5px; }
+.view { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; }
+.view > * { min-width: 0; }
+.pick {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px;
+  padding: 16px 20px; background: var(--sheet); border: 1px solid var(--line); border-radius: 6px;
+}
+.pick-top { display: grid; gap: 4px; flex: 1 1 320px; min-width: 0; }
+.pick-kicker { margin: 0; font: 500 12.5px/1.4 var(--font-data); color: var(--accent); }
+.pick h2 { margin: 0; font: 700 clamp(1.7rem, 3vw, 2.2rem)/1.05 var(--font-display); text-wrap: balance; }
+.pick-value { margin: 0; font: 500 clamp(1.5rem, 3vw, 2rem)/1.1 var(--font-data); color: var(--accent); }
+.pick-value small { display: block; font: 400 12.5px/1.3 var(--font-body); color: var(--muted); }
+.pick-why { margin: 0; max-width: 65ch; }
+.uses { display: flex; flex-wrap: wrap; gap: 2px 8px; margin: 0; max-width: 72ch; font-size: 14px; }
+.uses b { font-weight: 600; color: var(--accent); white-space: nowrap; }
+.pick-body { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; }
+.stats { display: grid; gap: 10px; align-content: start; }
+.stat-group { margin: 8px 0 0; font: 600 0.98rem/1.2 var(--font-display); }
+.stat-group:first-child { margin-top: 0; }
+.stat .name small { display: block; font-size: 11.5px; color: var(--muted); }
+.stat { display: grid; grid-template-columns: 118px minmax(0, 1fr) 108px; gap: 10px; align-items: center; font-size: 13.5px; }
+.stat .num { font: 500 13px var(--font-data); text-align: right; font-variant-numeric: tabular-nums; }
+.stat.on .name { font-weight: 600; color: var(--accent); }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin: 0; align-content: start; }
+.facts div { min-width: 0; }
+.facts dt { font-size: 12px; color: var(--muted); }
+.facts dd { margin: 0; font: 400 13px/1.35 var(--font-data); }
+.air { display: flex; gap: 10px; align-items: baseline; margin: 0; padding: 10px 12px; border-radius: 4px; background: var(--accent-soft); font-size: 13.5px; }
+.air.warn { background: var(--warn-soft); color: var(--warn); }
+.air b { font-weight: 600; white-space: nowrap; }
+
+.bar { position: relative; display: block; height: 9px; background: var(--track); border-radius: 2px; overflow: visible; }
+.bar.lg { height: 13px; }
+.bar i {
+  position: absolute; inset: 0 auto 0 0; display: block; background-color: var(--bead); border-radius: 2px 7px 7px 2px;
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, color-mix(in srgb, var(--sheet) 34%, transparent) 6px 7px);
+  transition: width 0.28s ease;
+}
+.on .bar i { background-color: var(--accent); }
+.out .bar i { background-color: var(--bead-off); }
+.bar b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--heat); }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+
+.colpick { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.col-tip {
+  position: absolute; z-index: 5; width: min(320px, 100%); padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: 4px;
+  background: var(--sheet); color: var(--ink); font-size: 12.5px; line-height: 1.4;
+}
+.colpick-label { margin-right: 4px; font-size: 12.5px; font-weight: 600; }
+.colpick button { padding: 3px 8px; border: 1px solid var(--line); border-radius: 4px; background: transparent; font-size: 12.5px; color: var(--muted); }
+.colpick button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); font-weight: 600; }
+.colpick button[aria-disabled="true"] { cursor: not-allowed; opacity: 0.55; }
+.table { background: var(--sheet); border: 1px solid var(--line); border-radius: 6px; overflow-x: auto; }
+.row {
+  display: grid; grid-template-columns: minmax(128px, 1.25fr) repeat(var(--cols, 5), minmax(0, 1fr)); gap: 12px; align-items: center;
+  padding: 10px 14px; border-top: 1px solid var(--line); min-width: calc(190px + var(--cols, 5) * 118px); background: var(--sheet);
+}
+.row .who, .row.head > span { position: sticky; left: 0; z-index: 2; align-self: stretch; margin: -10px 0 -10px -14px; padding: 10px 0 10px 14px; background: inherit; }
+.row .who { align-content: center; }
+.row.head > span { display: flex; align-items: flex-end; margin-block: -8px; padding-block: 8px; }
+.row:first-child { border-top: 0; }
+.row.head { padding-block: 8px; background: var(--track); align-items: end; }
+.row.head button {
+  border: 0; background: transparent; padding: 4px 6px; margin-inline: -6px; border-radius: 4px; text-align: left; font-size: 12.5px; font-weight: 500; color: var(--ink); line-height: 1.25;
+}
+.row.head button[aria-disabled="true"] { cursor: default; }
+.row.head button small { display: block; font: 400 11px var(--font-data); color: var(--muted); }
+.row.head button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.row.head button[aria-pressed="true"] small { color: var(--on-accent); }
+.row.head > span { font-size: 12.5px; font-weight: 600; }
+.row[data-id] { cursor: pointer; }
+.row[data-id]:hover, .row.sel { background: var(--accent-soft); }
+.detail { position: sticky; left: 0; box-sizing: border-box; width: var(--table-w, 100%); display: grid; gap: 14px; padding: 14px; border-top: 1px solid var(--line); background: var(--plate); }
+.who { display: grid; gap: 3px; min-width: 0; }
+.who button {
+  border: 0; background: transparent; padding: 0; text-align: left; font: 600 1.06rem/1.2 var(--font-display); color: var(--ink);
+}
+.who .rank { font: 400 12px var(--font-data); color: var(--muted); margin-right: 4px; }
+.chev { margin-left: 5px; font-size: 0.8em; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 3px; }
+.chip { font: 400 11px/1.5 var(--font-data); padding: 0 5px; border-radius: 3px; border: 1px solid var(--line); color: var(--muted); }
+.chip.warn { border-color: var(--warn); color: var(--warn); }
+.reason { font-size: 12.5px; line-height: 1.3; color: var(--warn); }
+.row .who button.vs-add { justify-self: start; font: 500 12.5px/1.3 var(--font-body); color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.out .who button { color: var(--muted); }
+.cell { display: grid; gap: 4px; min-width: 0; }
+.cell .lab { display: none; font-size: 12.5px; color: var(--muted); }
+.cell .val { font: 400 12.5px var(--font-data); font-variant-numeric: tabular-nums; }
+.cell.on .val { font-weight: 500; color: var(--accent); }
+.out .cell .val { color: var(--muted); }
+.out-toggle {
+  position: sticky; left: 0; display: flex; justify-content: space-between; gap: 12px; width: var(--table-w, 100%); padding: 10px 14px; border: 0; border-top: 1px solid var(--line);
+  background: var(--plate); font-size: 13px; font-weight: 600; color: var(--muted); text-align: left;
+}
+
+.versus { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 20px; background: var(--sheet); border: 1px solid var(--line); border-radius: 6px; }
+.versus h3 { margin: 0; font: 600 1.25rem/1.2 var(--font-display); }
+.vs-pick { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: start; }
+.vs-slot { display: grid; gap: 5px; min-width: 0; }
+.vs-slot-acts { display: flex; flex-wrap: wrap; gap: 3px 10px; min-height: 18px; }
+.vs-slot-acts button { padding: 0; border: 0; background: transparent; font-size: 12.5px; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.vs-field { display: grid; gap: 3px; min-width: 0; font-size: 12.5px; color: var(--muted); }
+.vs-field select { width: 100%; padding: 7px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--plate); color: var(--ink); font: 600 1rem var(--font-display); }
+.vs-swap { justify-self: start; padding: 7px 12px; border: 1px solid var(--line); border-radius: 4px; background: transparent; font-size: 13.5px; }
+.vs-summary { margin: 0; max-width: 65ch; font-weight: 500; }
+.vs-grid { display: grid; overflow-x: auto; }
+.vs-row { min-width: calc(132px + var(--n, 2) * 174px); display: grid; grid-template-columns: 118px repeat(var(--n, 2), minmax(0, 1fr)); gap: 14px; align-items: center; padding-block: 8px; border-top: 1px solid var(--line); font-size: 13.5px; }
+.vs-row.head { border-top: 0; padding-block: 0 6px; font: 600 1.06rem/1.2 var(--font-display); }
+.vs-row.fact { align-items: start; font-size: 13px; }
+.vs-group { min-width: calc(132px + var(--n, 2) * 174px); padding-block: 16px 5px; border-top: 1px solid var(--line); font: 600 1rem/1.2 var(--font-display); }
+.vs-label { position: sticky; left: 0; z-index: 1; align-self: stretch; background: var(--sheet); color: var(--muted); }
+.vs-label small { display: block; font-size: 11.5px; }
+.vs-side { display: grid; gap: 4px; min-width: 0; }
+.vs-val { font: 400 13px var(--font-data); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.vs-side.lead .vs-val { font-weight: 500; color: var(--accent); }
+.vs-side.lead .bar i { background-color: var(--accent); }
+.bar b.vs-mark { top: -4px; bottom: -4px; width: 2px; transform: translateX(-1px); background: var(--heat); box-shadow: 0 0 0 1px var(--sheet); }
+.vs-dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 50%; }
+.vs-name { display: none; font-size: 12.5px; font-weight: 600; }
+.vs-delta { font: 400 12.5px var(--font-data); color: var(--muted); }
+.vs-delta.won { color: var(--accent); }
+.empty { display: grid; gap: 10px; padding: 20px; background: var(--warn-soft); border: 1px solid var(--warn); border-radius: 6px; }
+.empty h2 { margin: 0; font: 700 1.7rem/1.1 var(--font-display); }
+.empty p { margin: 0; }
+.fixes { display: flex; flex-wrap: wrap; gap: 8px; }
+.fixes button { border: 0; border-radius: 4px; padding: 7px 12px; background: var(--accent); color: var(--on-accent); font-size: 13.5px; font-weight: 600; }
+
+.notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; font-size: 13.5px; color: var(--muted); }
+.notes h3 { margin: 0 0 6px; font: 600 1.05rem/1.2 var(--font-display); color: var(--ink); }
+.notes ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; }
+.notes > div { min-width: 0; }
+
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .panel { position: static; }
+  .panel-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .panel-toggle { display: flex; }
+  .panel.closed { padding-block: 12px; }
+  .panel.closed .panel-body { display: none; }
+}
+@media (max-width: 700px) {
+  .panel-body { grid-template-columns: minmax(0, 1fr); }
+  .pick-body, .notes { grid-template-columns: minmax(0, 1fr); }
+  .row { grid-template-columns: minmax(0, 1fr); gap: 6px; padding-block: 12px; min-width: 0; }
+  .row .who, .row.head > span { position: static; margin: 0; padding: 0; }
+  .detail, .out-toggle { position: static; width: 100%; }
+  .row.head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+  .row.head button { margin-inline: 0; }
+  .row.head button small { display: none; }
+  .cell { grid-template-columns: 96px minmax(0, 1fr) 92px; gap: 8px; align-items: center; }
+  .cell .lab { display: block; }
+  .cell .bar { grid-column: 2; grid-row: 1; }
+  .cell .val { grid-column: 3; grid-row: 1; text-align: right; }
+  .stat { grid-template-columns: 96px minmax(0, 1fr) 104px; }
+  .vs-pick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vs-row, .vs-group { min-width: 0; }
+  .vs-label { position: static; }
+  .vs-row { grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 6px 12px; }
+  .vs-label { grid-column: 1 / -1; }
+  .vs-row.head .vs-label { display: none; }
+  .vs-grid.many .vs-row { grid-template-columns: minmax(0, 1fr); }
+  .vs-grid.many .vs-row.head { display: none; }
+  .vs-grid.many .vs-name { display: block; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Bambu Filament Picker</h1>
+    <p class="lede">Set the conditions your part has to survive. Filament that can't cope drops out, and the rest rank by what you need most.</p>
+  </header>
+
+  <div class="layout" role="main">
+    <form class="panel closed" id="panel" aria-label="Part conditions">
+      <button type="button" class="panel-toggle" id="panel-toggle" aria-expanded="false" aria-controls="panel-body"><b id="panel-summary"></b><span id="panel-action">Change</span></button>
+      <div class="panel-body" id="panel-body">
+      <fieldset class="group">
+        <legend>What should the part do?</legend>
+        <div class="seg" id="mode">
+          <button type="button" id="mode-any" data-v="any">Any</button>
+          <button type="button" id="mode-rigid" data-v="rigid">Rigid</button>
+          <button type="button" id="mode-spring" data-v="spring">Spring back</button>
+          <button type="button" id="mode-flex" data-v="flex">Rubbery</button>
+        </div>
+      </fieldset>
+
+      <fieldset class="group rigid-only">
+        <legend>Sun exposure</legend>
+        <div class="seg" id="place">
+          <button type="button" id="place-any" data-v="any">Any</button>
+          <button type="button" id="place-shade" data-v="shade">Partial shade</button>
+          <button type="button" id="place-out" data-v="outdoors">In the sun</button>
+        </div>
+      </fieldset>
+
+      <div class="group rigid-only">
+        <div class="temp-head">
+          <label class="label" for="temp">Required heat resistance</label>
+          <output id="temp-out" for="temp">No heat limit</output>
+        </div>
+        <input type="range" id="temp" min="40" max="190" step="5" value="40">
+        <div class="presets" id="presets">
+          <button type="button" id="p-car" data-t="80">Hot car 80 °C</button>
+          <button type="button" id="p-motor" data-t="120">Near a motor 120 °C</button>
+        </div>
+        <p class="hint">Set the hottest the part itself will get, not the air. A dark part in the sun can get much hotter. Presets are rough guides.</p>
+      </div>
+
+      <fieldset class="group rigid-only">
+        <legend>Part conditions</legend>
+        <label class="check"><input type="checkbox" id="creep"><span>Under load for months<small>Rules out sag resistance below 3. Heavy loads may need 4 or 5.</small></span></label>
+        <label class="check"><input type="checkbox" id="damp"><span>Damp or humid place<small>Rules out PA6-CF, which softens when wet</small></span></label>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Highest cost</legend>
+        <div class="seg" id="maxcost">
+          <button type="button" id="cost-5" data-v="5">Any</button>
+          <button type="button" id="cost-1" data-v="1">1</button>
+          <button type="button" id="cost-2" data-v="2">2</button>
+          <button type="button" id="cost-3" data-v="3">3</button>
+          <button type="button" id="cost-4" data-v="4">4</button>
+        </div>
+        <p class="hint">1 is about $25/kg or less, and 4 is up to about $90/kg.</p>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>My preferences</legend>
+        <label class="check"><input type="checkbox" id="styrene"><span>Avoid styrene<small>Rules out ABS and the ASA family</small></span></label>
+        <label class="check"><input type="checkbox" id="nodry"><span>Skip filament that must be dried<small>Rules out PC, TPU, and the engineering CF grades</small></span></label>
+        <label class="check"><input type="checkbox" id="noanneal"><span>Won't bake prints in an oven<small>Some CF filaments only reach their listed heat resistance after baking. This rules them out above 60 °C, which is my estimate.</small></span></label>
+      </fieldset>
+      </div>
+    </form>
+
+    <div class="results">
+      <div class="topbar">
+        <div class="seg views" id="views">
+          <button type="button" id="tab-rank" data-v="rank">Ranking</button>
+          <button type="button" id="tab-compare" data-v="compare">Compare</button>
+        </div>
+        <div class="seg units" id="units" role="group" aria-label="Units">
+          <button type="button" id="units-real" data-v="real">Actual values</button>
+          <button type="button" id="units-plain" data-v="plain">Compared to PLA</button>
+        </div>
+      </div>
+
+      <div class="view" id="view-rank">
+        <div class="col-tip" id="head-tip" role="tooltip" hidden></div>
+        <section class="empty" id="empty" aria-live="polite" hidden></section>
+        <div class="colpick" id="colpick" aria-label="Choose ranking columns"></div>
+        <section aria-label="Material ranking">
+          <div class="table" id="table"></div>
+        </section>
+        <p class="hint" id="sheet-note"></p>
+      </div>
+
+      <section class="versus" id="versus" aria-labelledby="vs-title" hidden>
+        <h3 id="vs-title">Compare materials</h3>
+        <div class="vs-pick" id="vs-slots"></div>
+        <button type="button" class="vs-swap" id="cmp-more">Add a material</button>
+        <p class="vs-summary" id="vs-summary" aria-live="polite"></p>
+        <div class="vs-grid" id="vs-grid"></div>
+        <p class="hint" id="vs-hint"></p>
+      </section>
+
+    </div>
+  </div>
+
+  <footer class="notes">
+    <div>
+      <h3>How to read the numbers</h3>
+      <ul>
+        <li>The list assumes a printer like the Bambu Lab X2D, with a 300 °C nozzle, 120 °C bed, and 65 °C heated chamber.</li>
+        <li>Stiffness is XY bending modulus, and strength is XY bending strength.</li>
+        <li>Toughness is XY impact strength, and layer adhesion is Z impact strength.</li>
+        <li>Heat is HDT at 0.45 MPa, a light load. A material only passes if its HDT is at least 10 °C above your temperature, so heavily loaded parts need more margin.</li>
+        <li>Compared to PLA divides stiffness, strength, toughness, and layer adhesion by PLA Basic's values, so 2.0× means double. Bars don't change. Other columns keep their normal units.</li>
+        <li>Bars in a column share one scale, starting at zero, so lengths compare directly. Toughness and layer bars widen their scale when TPU is shown, and a note says when.</li>
+        <li>Great for lines are examples, not approval of a specific part. Test anything load-bearing or safety-related.</li>
+        <li>Passing only means a material matches the rules set here. It doesn't prove a real part will work.</li>
+        <li>PET-CF, PAHT-CF, and PA6-CF heat values come from annealed test bars. Bambu suggests annealing printed parts at about 80 to 130 °C for 5 to 12 hours, so an unannealed part may soften earlier. Bambu doesn't publish how much earlier.</li>
+        <li>Values come from Bambu Lab test bars at 100% infill. Real parts, and other brands, will differ.</li>
+        <li>Bambu's newer PETG Basic sheet lists higher strength (81 MPa) and stiffness (1790 MPa) than its guide. This page uses the guide so the materials stay comparable.</li>
+        <li>Spring back is my judgment for clips and snap fits, based on general material behavior. Stretch before break alone doesn't show that a part springs back, so test your part, because repeated bending can still fatigue it.</li>
+        <li>Stretch before break comes from Bambu's data sheets, and TPU bars are cut off because they pass 650%.</li>
+        <li>Ease, sag resistance, accuracy and fit, warp resistance, and surface are my 1 to 5 estimates from general material behavior on an enclosed printer, where 5 is best. They aren't lab data, so print a test for parts that must fit.</li>
+        <li>Fume risk is my rough 1 to 5 estimate of print emissions, where 1 is lowest. It leans on limited studies and base polymers, and it isn't a medical or safety rating. Brand, color, and nozzle temperature all change emissions.</li>
+        <li>UV resistance is a 1 to 5 estimate from outdoor material guides. In the sun needs 5, and partial shade needs at least 3. With no sun exposure selected, UV rules nothing out. Color, grade, and climate all change the result, and stabilized PC or nylon can last much longer.</li>
+        <li>Overhang and bridging are the limits listed on Bambu's data sheets, not a side-by-side test, so small differences may not hold on real prints.</li>
+        <li>Cost is a rough 1 to 5 band based on retail prices per kg seen in November 2026. Prices vary by shop, region, sale, and spool size, and the bands ignore how much material a part uses.</li>
+        <li>Bed ranges are for textured PEI on base grades. PLA variants use the range from their own data sheets.</li>
+        <li>Color can shift these numbers, especially on specialty colors, so treat each row as typical for that product.</li>
+        <li>After getting wet notes are general guidance, except the nylon warning, which comes from Bambu's drying guide.</li>
+        <li>Air quality notes are qualitative, because no single study covers all of these materials.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Sources</h3>
+      <ul>
+        <li><a href="https://cdn1.bambulab.com/filament/a5e185aed14e6/filament-guide-en-4.pdf">Bambu Filament Guide</a></li>
+        <li><a href="https://www.lesimprimantes3d.fr/dl/Bambus_ASA-CF_Technical_Data_Sheet.pdf">Bambu ASA-CF data sheet</a></li>
+        <li><a href="https://www.additive-x.com/shop/mpattachments/file/viewonline/id/580/product_id/2330">Bambu PETG Basic data sheet</a></li>
+        <li><a href="https://www.additive-x.com/shop/mpattachments/file/viewonline/id/513/product_id/2261">Bambu PLA Matte data sheet</a></li>
+        <li><a href="https://store.bblcdn.eu/s8/default/d0de0f57694b406dbf3e9b2345b7dbb9/Bambu_PLA_Silk__Technical_Data_Sheet.pdf">Bambu PLA Silk+ data sheet</a></li>
+        <li><a href="https://cdn.shopify.com/s/files/1/0584/7236/6216/files/Bambu_PLA_Silk_Dual_Color_Technical_Data_Sheet.pdf">Bambu PLA Silk Dual Color data sheet</a></li>
+        <li><a href="https://cdn.shopify.com/s/files/1/0645/5876/0155/files/Bambu_PLA_Metal_Technical_Data_Sheet.pdf">Bambu PLA Metal data sheet</a></li>
+        <li><a href="https://cdn.kspelectronics.in/wp-content/uploads/2026/07/19233822/Bambu-PLA-Tough-Technical-Data-Sheet.pdf">Bambu PLA Tough+ data sheet</a></li>
+        <li><a href="https://eu.store.bambulab.com/fr/products/pa6-cf">Bambu PA6-CF wet and dry stiffness</a></li>
+        <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9229569">Emission profiles of ABS, ASA, nylon and PETG (Molecules, 2022)</a></li>
+        <li><a href="https://3dprint.com/305725/how-toxic-is-3d-printing-ul-research-sheds-light/">UL Research emissions study summary</a></li>
+        <li><a href="https://3ddevice.com.ua/en/product/3d-printer-bambu-lab-x2d/">Bambu Lab X2D specifications</a></li>
+        <li><a href="https://www.additive-x.com/shop/mpattachments/file/viewonline/id/566/product_id/2315">Bambu ABS data sheet</a></li>
+        <li><a href="https://www.additive-x.com/shop/mpattachments/file/viewonline/id/591/product_id/2340">Bambu PC data sheet</a></li>
+        <li><a href="https://polyalkemi.no/wp-content/uploads/2024/01/Bambu_ASA_Technical_Data_Sheet.pdf">Bambu ASA data sheet</a></li>
+        <li><a href="https://wiki.bambulab.com/en/filament-acc/filament/dry-filament">Bambu drying guide</a></li>
+        <li><a href="https://cdn.shopify.com/s/files/1/0380/5149/files/Bambu_PLA_Basic_Technical_Data_Sheet.pdf">Bambu PLA Basic data sheet</a></li>
+        <li><a href="https://cdn.shopify.com/s/files/1/0645/5876/0155/files/Bambu_TPU_95A_Technical_Data_Sheet.pdf">Bambu TPU 95A data sheet</a></li>
+        <li><a href="https://www.additive-x.com/shop/mpattachments/file/viewonline/id/823/product_id/2584">Bambu TPU 95A HF data sheet</a></li>
+        <li><a href="https://cdn.shopify.com/s/files/1/1339/4265/files/Bambu_TPU_for_AMS_Technical_Data_Sheet.pdf">Bambu TPU for AMS data sheet</a></li>
+        <li><a href="https://store.bblcdn.eu/s8/default/8140c9d50a6049a3b634fa1387518d8d/Bambu_TPU_90A_Technical_Data_Sheet_582bf8f6-1f0a-474c-aeda-9e72af3689dc.pdf">Bambu TPU 90A data sheet</a></li>
+        <li><a href="https://c.cdnmp.net/828809388/content/Info/BambuLab/Bambu_TPU_85A_Technical_Data_Sheet_a7233668-497b-487f-af8a-3adb49fafaa1.pdf">Bambu TPU 85A data sheet</a></li>
+        <li><a href="https://shop3duniverse.com/products/bambu-lab-tpu-85a-1-75mm-1kg">TPU 85A notes and price at 3D Universe</a></li>
+        <li><a href="https://www.3djake.com/info/guide/outdoor-ready-filaments-for-weather-resistant-3d-prints">Outdoor filament guide at 3DJake</a></li>
+        <li><a href="https://jlc3dp.com/blog/best-3d-printing-filament-outdoor-use">PLA, PETG, and ASA outdoor guide at JLC3DP</a></li>
+        <li><a href="https://shop3duniverse.com/collections/bambu-lab-filaments">Bambu filament prices at 3D Universe</a></li>
+        <li><a href="https://www.igo3d.com/en/bambu-lab-paht-cf-filament-en">PAHT-CF price at iGo3D</a></li>
+        <li><a href="https://shop3duniverse.com/products/bambu-lab-pet-cf-1-75mm-1kg-black">PET-CF price at 3D Universe</a></li>
+        <li><a href="https://ultimate3dprintingstore.com/products/bambu-lab-pa6-cf-filament">PA6-CF price at Ultimate 3D Printing Store</a></li>
+        <li><a href="https://ultimate3dprintingstore.com/products/bambu-lab-asa-cf-filament-1-75mm-1kg-black">ASA-CF price at Ultimate 3D Printing Store</a></li>
+      </ul>
+    </div>
+  </footer>
+</div>
+
+<script>
+const PROPS = [
+  { id: "stiff", name: "Stiffness", unit: "MPa", most: "stiffest", max: 6000, sample: "Resists bending" },
+  { id: "str", name: "Strength", unit: "MPa", most: "strongest", max: 160, sample: "Load before failure" },
+  { id: "tough", name: "Toughness", unit: "kJ/m²", most: "toughest", max: 85, flexMax: 130, sample: "Survives impact" },
+  { id: "layer", name: "Layer adhesion", unit: "kJ/m²", most: "best bonded across layers", max: 28, flexMax: 90, sample: "Across layers" },
+  { id: "hdt", name: "Heat", unit: "°C", most: "most heat resistant", max: 220, sample: "HDT, 0.45 MPa" }
+];
+
+const AIR_UL_LOW = "UL's testing put it in the lower exposure group, below ABS.";
+const MATERIALS = [
+  { id: "pla", name: "PLA Basic", kind: "Plain PLA", stiff: 2750, str: 76, tough: 26.6, layer: 13.8, hdt: 57, water: 0.43, dry: "Optional", dryAt: "55 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "190 to 230 °C", bed: "55 to 65 °C", speed: "Under 300 mm/s", why: "Cheap, stiff for its price, and the easiest print here. It's brittle, though, and it softens early.", air: AIR_UL_LOW },
+  { id: "pla-cf", name: "PLA-CF", kind: "Carbon-fiber PLA", stiff: 3950, str: 89, tough: 23.2, layer: 7.8, hdt: 55, water: 0.42, dry: "Optional", dryAt: "55 °C, 8 h", nozzle: "Hardened steel, 0.4 mm or larger", temp: "210 to 240 °C", bed: "55 to 65 °C", speed: "Under 250 mm/s", why: "The easiest big jump in stiffness. It stays a mild-temperature material and is one of the least tough options here.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
+  { id: "pla-matte", name: "PLA Matte", kind: "PLA with a matte finish", stiff: 2360, str: 53, tough: 19.2, layer: 6.6, hdt: 58, water: 0.4, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "190 to 230 °C", bed: "35 to 45 °C", speed: "Under 300 mm/s", why: "Chosen for its flat, low-gloss look. It gives up a lot of strength and layer adhesion compared with PLA Basic, so keep it for looks or light loads. Its high stretch doesn't make it tough.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
+  { id: "pla-silk", name: "PLA Silk+", kind: "PLA with a glossy finish", stiff: 2460, str: 75, tough: 18.5, layer: 8.5, hdt: 60, water: 0.4, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "210 to 240 °C", bed: "35 to 45 °C", speed: "Under 250 mm/s", why: "A glossy finish with almost the same strength as PLA Basic. It's less tough, and its layer adhesion is lower.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
+  { id: "pla-silk-dual", name: "PLA Silk Dual", kind: "Two-tone glossy PLA", stiff: 2370, str: 66, tough: 24.5, layer: 4.6, hdt: 53, water: 0.52, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "210 to 240 °C", bed: "35 to 45 °C", speed: "Under 250 mm/s", why: "A decorative two-tone finish. Its layer adhesion is about a third of PLA Basic's, so avoid load across the layers.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
+  { id: "pla-metal", name: "PLA Metal", kind: "PLA with a metallic finish", stiff: 2290, str: 66, tough: 58.9, layer: 16.8, hdt: 62, water: 0.4, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "190 to 230 °C", bed: "35 to 45 °C", speed: "Under 300 mm/s", why: "A metallic look with more than double PLA Basic's toughness. It gives up some stiffness and strength in exchange.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
+  { id: "pla-tough", name: "PLA Tough+", springy: true, kind: "Toughened PLA", stiff: 2140, str: 65, tough: 80.6, layer: 25.9, hdt: 61, water: 0.27, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "220 to 250 °C", bed: "35 to 65 °C", speed: "Under 300 mm/s", why: "The toughest rigid material here, with the best layer adhesion too. It's about 22% less stiff than PLA Basic.", air: "Not compared in the studies used here. Bambu advises good ventilation because of odors." },
+  { id: "petg", name: "PETG Basic", springy: true, kind: "Plain PETG", stiff: 1670, str: 65, tough: 52.7, layer: 13.6, hdt: 69, water: 0.32, dry: "Recommended", dryAt: "65 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "240 to 270 °C", bed: "60 to 80 °C", speed: "Under 200 mm/s", why: "The tough everyday default for indoor parts. It flexes before it breaks, so it's a weak choice when stiffness matters.", air: "UL found lower exposure than ABS, but still listed it among high total-VOC emitters, so keep the room aired." },
+  { id: "petg-hf", name: "PETG HF", kind: "High-speed PETG", stiff: 2050, str: 64, tough: 31.5, layer: 10.6, hdt: 69, water: 0.4, dry: "Recommended", dryAt: "65 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "230 to 260 °C", bed: "65 to 75 °C", speed: "Under 300 mm/s", why: "Stiffer and faster to print than PETG Basic, but noticeably less tough. Choose Basic when impact matters more than speed.", air: "Not compared in the studies used here, so treat it like PETG at minimum." },
+  { id: "petg-cf", name: "PETG-CF", kind: "Carbon-fiber PETG", stiff: 2910, str: 70, tough: 41.2, layer: 10.7, hdt: 74, water: 0.3, dry: "Recommended", dryAt: "65 °C, 8 h", nozzle: "Hardened steel, 0.4 mm or larger", temp: "240 to 270 °C", bed: "60 to 80 °C", speed: "Under 200 mm/s", why: "Stiffer than PETG and tougher than PLA-CF, with little fuss. It's a good all-round pick for indoor brackets.", air: "Not compared in the studies used here, so treat it like PETG at minimum." },
+  { id: "abs", name: "ABS", springy: true, kind: "Plain ABS", stiff: 1880, str: 62, tough: 39.3, layer: 7.4, hdt: 87, water: 0.65, dry: "Optional", dryAt: "80 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "240 to 280 °C", bed: "90 to 100 °C", speed: "Under 300 mm/s", styrene: true, why: "Tough and heat tolerant, with better layer adhesion than ASA. ASA is about even on stiffness, strength, and toughness, and handles more heat. Choose ABS for layer adhesion, price, color, or acetone smoothing.", air: "Styrene is the main VOC, and UL put ABS in the highest exposure group. Vent outdoors if you can." },
+  { id: "asa", name: "ASA", springy: true, kind: "Plain ASA", stiff: 1920, str: 65, tough: 41, layer: 4.9, hdt: 100, water: 0.45, dry: "Optional", dryAt: "80 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "240 to 280 °C", bed: "90 to 100 °C", speed: "Under 300 mm/s", styrene: true, uv: true, why: "The outdoor default, with good UV resistance. Its layer adhesion is among the weakest here, so orient loads along the layers.", air: "One study measured under a quarter of ABS's styrene, but UL listed ASA among high total-VOC emitters. Vent outdoors if you can." },
+  { id: "asa-cf", name: "ASA-CF", kind: "Carbon-fiber ASA", stiff: 3740, str: 72, tough: 14, layer: 9.4, hdt: 110, water: 0.33, dry: "Recommended", dryAt: "80 °C, 8 h", nozzle: "Hardened steel, 0.4 mm or larger", temp: "250 to 280 °C", bed: "80 to 100 °C", speed: "Under 250 mm/s", styrene: true, uv: true, why: "Nearly twice as stiff as ASA, with stronger layers and more heat resistance. The cost is much lower impact toughness.", air: "It has an ASA base, so treat it like ASA and vent outdoors if you can." },
+  { id: "pc", name: "PC", springy: true, kind: "Polycarbonate", stiff: 2310, str: 108, tough: 34.8, layer: 9, hdt: 117, water: 0.25, dry: "Required", dryAt: "80 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "260 to 290 °C", bed: "100 to 120 °C", speed: "Under 300 mm/s", why: "Strong and heat resistant without carbon fiber. Dry it first and let the heated chamber do its job.", air: "Not compared in the studies used here. Ventilate the room while printing." },
+  { id: "pet-cf", name: "PET-CF", anneal: true, noAms: true, kind: "Carbon-fiber PET", stiff: 5320, str: 131, tough: 36, layer: 4.5, hdt: 205, water: 0.37, dry: "Required", dryAt: "80 °C, 8 to 12 h", nozzle: "Hardened steel, 0.6 mm recommended", temp: "260 to 300 °C", bed: "70 to 100 °C", speed: "Under 100 mm/s", why: "The most heat resistant, and it absorbs little water. Layer adhesion is the weakest here, so keep the main load along the layers.", air: "Not compared in the studies used here. Ventilate the room while printing." },
+  { id: "paht-cf", name: "PAHT-CF", anneal: true, kind: "Carbon-fiber nylon, PA12 based", stiff: 4230, str: 125, tough: 57.5, layer: 13.3, hdt: 194, water: 0.88, dry: "Required", dryAt: "80 °C, 8 to 12 h", nozzle: "Hardened steel, 0.6 mm recommended", temp: "260 to 300 °C", bed: "100 to 120 °C", speed: "Under 100 mm/s", why: "The best all-rounder here, with high numbers in every column. It keeps most of its stiffness when damp, at about 3640 MPa.", air: "UL listed some nylons among high total-VOC emitters. Ventilate the room while printing." },
+  { id: "pa6-cf", name: "PA6-CF", anneal: true, noAms: true, kind: "Carbon-fiber nylon, PA6 based", stiff: 5460, str: 151, tough: 40.3, layer: 15.5, hdt: 186, water: 2.35, dry: "Required", dryAt: "80 °C, 8 to 12 h", nozzle: "Hardened steel, 0.6 mm recommended", temp: "260 to 300 °C", bed: "100 to 120 °C", speed: "Under 100 mm/s", wetSoft: true, why: "The stiffest and strongest here when dry. It absorbs the most water here, and its stiffness drops to about 3560 MPa when wet.", air: "UL listed some nylons among high total-VOC emitters, and some studies found caprolactam from nylon, though not all. Ventilate the room while printing." }
+];
+
+const TPU = { id: "tpu", name: "TPU 95A", kind: "Flexible, Shore 95A", stiff: null, str: null, tough: 125.2, layer: 88.7, hdt: null, water: 1.16, dry: "Required", dryAt: "70 °C, 8 h", nozzle: "0.4 mm or larger", temp: "220 to 240 °C", bed: "30 to 45 °C", speed: "Under 80 mm/s", why: "The flexible choice, with by far the best impact and layer numbers here. Use the X2D's main direct-drive extruder, especially for softer grades. Bambu publishes no heat deflection value, so test it near heat.", air: "Not compared in the studies used here. Ventilate the room while printing." };
+
+const TPUS = [
+  TPU,
+  { ...TPU, id: "tpu-hf", name: "TPU 95A HF", kind: "Faster flexible, Shore 95A", tough: 123.2, layer: 86.3, water: 1.08, bed: "30 to 35 °C", speed: "Under 200 mm/s", noAms: true, why: "Feels like TPU 95A, but prints several times faster. It's the easiest everyday TPU when you don't need multi-material printing. Bambu publishes no heat deflection value, so test it near heat.", air: "Not compared in the studies used here. Ventilate the room while printing." },
+  { ...TPU, id: "tpu-ams", name: "TPU for AMS", springy: true, kind: "Firm flexible, Shore 68D", tough: 124.3, layer: 9.6, water: 1.2, bed: "30 to 35 °C", speed: "Under 250 mm/s", why: "Much firmer than the A grades, at Shore 68D, so it feeds through an AMS more easily. Its layer adhesion is far lower, so don't expect the same flexible strength.", air: "Not compared in the studies used here. Ventilate the room while printing." },
+  { ...TPU, id: "tpu-90a", name: "TPU 90A", kind: "Soft flexible, Shore 90A", tough: 124.2, layer: 87.3, water: 0.61, temp: "200 to 250 °C", bed: "30 to 35 °C", speed: "Under 200 mm/s", noAms: true, why: "Softer and more comfortable than 95A, but harder to feed. Keep overhangs gentle, and print it through the main direct-drive extruder.", air: "Not compared in the studies used here. Ventilate the room while printing." },
+  { ...TPU, id: "tpu-85a", name: "TPU 85A", kind: "Very soft flexible, Shore 85A", tough: 124.3, layer: 88.5, water: 0.67, temp: "200 to 250 °C", bed: "30 to 35 °C", speed: "Under 200 mm/s", nozzle: "0.6 mm or larger", noAms: true, why: "The softest here, for parts that should feel rubbery. It's the hardest to print, and Bambu warns against using Unload, so follow its unloading steps.", air: "Not compared in the studies used here. Ventilate the room while printing." }
+];
+
+const COST = { "petg-hf": 1, "tpu-hf": 3, "tpu-ams": 3, "tpu-90a": 3, "tpu-85a": 3, pla: 1, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 1, "pla-metal": 1, "pla-tough": 1, petg: 1, abs: 1, asa: 2, "pla-cf": 2, "petg-cf": 2, "asa-cf": 3, pc: 3, tpu: 3, "pa6-cf": 4, "pet-cf": 4, "paht-cf": 5 };
+const COST_BAND = { 1: "about $25/kg or less", 2: "about $26 to $35/kg", 3: "about $36 to $45/kg", 4: "about $46 to $90/kg", 5: "over about $90/kg" };
+MATERIALS.concat(TPUS).forEach((m) => { m.cost = COST[m.id]; });
+const costText = (m) => m.cost + " of 5, " + COST_BAND[m.cost];
+const OVERHANG = { "petg-hf": 70, "tpu-hf": 55, "tpu-ams": 70, "tpu-90a": 40, "tpu-85a": 40, pla: 55, "pla-cf": 55, "pla-matte": 55, "pla-silk": 55, "pla-silk-dual": 55, "pla-metal": 55, "pla-tough": 55, petg: 70, "petg-cf": 70, abs: 70, asa: 70, "asa-cf": 70, pc: 70, "pet-cf": 70, "paht-cf": 70, "pa6-cf": 70, tpu: 70 };
+const BRIDGE = { "petg-hf": 30, "tpu-hf": 20, "tpu-ams": 20, "tpu-90a": 10, "tpu-85a": 10, pla: 30, "pla-cf": 30, "pla-matte": 30, "pla-silk": 30, "pla-silk-dual": 30, "pla-metal": 30, "pla-tough": 30, petg: 30, "petg-cf": 30, abs: 40, asa: 40, "asa-cf": 40, pc: 40, "pet-cf": 30, "paht-cf": 40, "pa6-cf": 40, tpu: 20 };
+const EASE = { "petg-hf": 4, "tpu-hf": 2, "tpu-ams": 3, "tpu-90a": 1, "tpu-85a": 1, pla: 5, "pla-matte": 5, "pla-metal": 5, "pla-silk": 4, "pla-silk-dual": 4, "pla-tough": 4, "pla-cf": 4, petg: 4, "petg-cf": 4, abs: 3, asa: 3, "asa-cf": 3, pc: 2, tpu: 2, "pet-cf": 2, "paht-cf": 2, "pa6-cf": 1 };
+MATERIALS.concat(TPUS).forEach((m) => {
+  m.overhang = OVERHANG[m.id]; m.bridge = BRIDGE[m.id]; m.ease = EASE[m.id];
+  m.speedMax = Number(m.speed.match(/\d+/)[0]);
+});
+const ACCURACY = { "petg-hf": 4, "tpu-hf": 1, "tpu-ams": 2, "tpu-90a": 1, "tpu-85a": 1, pla: 5, "pla-cf": 5, "pla-matte": 5, "pla-silk": 4, "pla-silk-dual": 4, "pla-metal": 4, "pla-tough": 4, petg: 4, "petg-cf": 4, abs: 3, asa: 3, "asa-cf": 4, pc: 3, "pet-cf": 4, "paht-cf": 4, "pa6-cf": 3, tpu: 1 };
+const WARP = { "petg-hf": 4, "tpu-hf": 4, "tpu-ams": 4, "tpu-90a": 4, "tpu-85a": 4, pla: 5, "pla-cf": 5, "pla-matte": 5, "pla-silk": 5, "pla-silk-dual": 5, "pla-metal": 5, "pla-tough": 5, petg: 4, "petg-cf": 5, abs: 2, asa: 3, "asa-cf": 4, pc: 2, "pet-cf": 4, "paht-cf": 3, "pa6-cf": 2, tpu: 4 };
+const SURFACE = { "petg-hf": 3, "tpu-hf": 2, "tpu-ams": 3, "tpu-90a": 2, "tpu-85a": 2, pla: 4, "pla-cf": 4, "pla-matte": 5, "pla-silk": 5, "pla-silk-dual": 5, "pla-metal": 5, "pla-tough": 4, petg: 3, "petg-cf": 4, abs: 4, asa: 4, "asa-cf": 4, pc: 3, "pet-cf": 4, "paht-cf": 4, "pa6-cf": 4, tpu: 2 };
+const UV_SCORE = { "petg-hf": 3, "tpu-hf": null, "tpu-ams": null, "tpu-90a": null, "tpu-85a": null, pla: 1, "pla-cf": 1, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 1, "pla-metal": 1, "pla-tough": 1, petg: 3, "petg-cf": 3, abs: 2, asa: 5, "asa-cf": 5, pc: 3, "pet-cf": 3, "paht-cf": 2, "pa6-cf": 2, tpu: null };
+const FUME = { "petg-hf": 2, "tpu-hf": 2, "tpu-ams": 2, "tpu-90a": 2, "tpu-85a": 2, pla: 1, "pla-cf": 1, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 1, "pla-metal": 1, "pla-tough": 2, petg: 2, "petg-cf": 2, tpu: 2, pc: 3, "pet-cf": 3, "paht-cf": 3, "pa6-cf": 3, asa: 4, "asa-cf": 4, abs: 5 };
+MATERIALS.concat(TPUS).forEach((m) => { m.fume = FUME[m.id]; });
+const USES = {
+  pla: "Test prints, trial fits, desk organizers, display models",
+  "pla-cf": "Stiff indoor holders, camera mounts, drilling guides",
+  "pla-matte": "Scale models, name signs, product samples, decorative covers",
+  "pla-silk": "Vases, gifts, shiny decorative models",
+  "pla-silk-dual": "Vases, ornaments, two-color decorations",
+  "pla-metal": "Costume parts, trophies, metal-look props, tough decorations",
+  "pla-tough": "Indoor boxes and cases, tool holders, drilling guides, parts that get dropped",
+  petg: "Storage bins, bathroom holders, shelf supports, snap-on clips",
+  "petg-hf": "Quick everyday parts, boxes, covers, simple holders",
+  "petg-cf": "Stiff indoor supports, machine covers, printer upgrade parts",
+  abs: "Smooth-finished cases, hot indoor parts, car interior parts",
+  asa: "Garden parts, balcony mounts, outdoor sensor cases, outside car parts",
+  "asa-cf": "Stiff outdoor supports, roof rack mounts, bike accessories",
+  pc: "Heat-resistant cases, lamp parts, tough covers near warm electronics",
+  "pet-cf": "Stiff parts for hot places, motor covers, parts for damp air",
+  "paht-cf": "Motor mounts, supports near an engine, strong tool holders, gears",
+  "pa6-cf": "Strong supports in dry places, drone and robot frames, drilling guides",
+  tpu: "Phone cases, gaskets, grips, vibration feet, bumpers",
+  "tpu-hf": "Quick flexible parts, phone cases, cable guards, bumpers",
+  "tpu-ams": "Multi-color flexible parts, firm feet, tool grips",
+  "tpu-90a": "Soft grips, straps, gaskets, wearable parts",
+  "tpu-85a": "Very soft grips, cushions, seals, comfortable wearables"
+};
+MATERIALS.concat(TPUS).forEach((m) => { m.uses = USES[m.id]; });
+const WET_NOTE = (m) => {
+  if (m.id.startsWith("pla")) return "Prints better after drying, but old brittle filament may stay brittle";
+  if (m.id === "paht-cf" || m.id === "pa6-cf") return "Dry it early, because it gets hard to recover after months in open air";
+  if (m.id.startsWith("tpu")) return "Usually recovers with a long dry";
+  return "Usually recovers with drying";
+};
+MATERIALS.concat(TPUS).forEach((m) => { m.wet = WET_NOTE(m); });
+const UV_NEED = { any: 0, indoors: 0, shade: 3, outdoors: 5 };
+MATERIALS.concat(TPUS).forEach((m) => { m.uvr = UV_SCORE[m.id]; m.accuracy = ACCURACY[m.id]; m.warp = WARP[m.id]; m.surface = SURFACE[m.id]; });
+const STRETCH = { "petg-hf": 8.6, "tpu-hf": 650, "tpu-ams": 650, "tpu-90a": 650, "tpu-85a": 700, pla: 12.2, "pla-cf": 8.4, "pla-matte": 32.8, "pla-silk": 2.8, "pla-silk-dual": 3.5, "pla-metal": 14.7, "pla-tough": 9.4, petg: 11.2, "petg-cf": 10.4, abs: 10.5, asa: 9.2, "asa-cf": 9.6, pc: 3.8, "pet-cf": 4.1, "paht-cf": 10.4, "pa6-cf": 5.8, tpu: 700 };
+MATERIALS.concat(TPUS).forEach((m) => { m.stretch = STRETCH[m.id]; });
+const SAG = { "petg-hf": 3, "pet-cf": 5, "paht-cf": 5, "asa-cf": 5, pc: 5, "petg-cf": 4, abs: 4, asa: 4, "pa6-cf": 4, petg: 3, "pla-cf": 3, "tpu-ams": 3, pla: 2, "pla-tough": 2, "pla-metal": 2, tpu: 2, "tpu-hf": 2, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 1, "tpu-90a": 1, "tpu-85a": 1 };
+const MIN_SAG = 3;
+MATERIALS.concat(TPUS).forEach((m) => { m.sag = SAG[m.id]; });
+const COLS = PROPS.concat([
+  { id: "stretch", name: "Stretch before break", unit: "%", most: "stretchiest", max: 35 },
+  { id: "sag", name: "Sag resistance", unit: "of 5, est.", most: "most sag resistant", max: 5, scale: true },
+  { id: "cost", name: "Cost", unit: "of 5", most: "cheapest", max: 5, low: true, scale: true },
+  { id: "ease", name: "Ease", unit: "of 5, est.", most: "easiest to print", max: 5, scale: true },
+  { id: "accuracy", name: "Accuracy and fit", unit: "of 5, est.", most: "most accurate", max: 5, scale: true },
+  { id: "warp", name: "Warp resistance", unit: "of 5, est.", most: "most warp resistant", max: 5, scale: true },
+  { id: "surface", name: "Surface", unit: "of 5, est.", most: "best surface", max: 5, scale: true },
+  { id: "fume", name: "Fume risk", unit: "of 5, est.", most: "lowest fume risk", max: 5, low: true, scale: true },
+  { id: "uvr", name: "UV resistance", unit: "of 5, est.", most: "most UV resistant", max: 5, scale: true, missing: "Not covered" },
+  { id: "overhang", name: "Overhang", unit: "°", most: "highest listed overhang", max: 80, exact: true, missing: "Not confirmed" },
+  { id: "bridge", name: "Bridging", unit: "mm", most: "longest listed bridge", max: 50, exact: true, missing: "Not confirmed" },
+  { id: "water", name: "Water uptake", unit: "%", most: "lowest water uptake", max: 2.5, low: true },
+  { id: "speedMax", name: "Listed max speed", unit: "mm/s", most: "fastest", max: 300 }
+]);
+const COL_ORDER = ["stiff", "str", "tough", "layer", "stretch", "sag", "hdt", "uvr", "water", "accuracy", "warp", "surface", "overhang", "bridge", "ease", "speedMax", "cost", "fume"];
+COLS.sort((a, b) => COL_ORDER.indexOf(a.id) - COL_ORDER.indexOf(b.id));
+const COL_GROUP = { stiff: "Mechanical", hdt: "Environment", accuracy: "Print quality", ease: "Practical" };
+const groupRow = (name) => '<div class="vs-group">' + name + "</div>";
+const COL_TIPS = {
+  stiff: "How much it resists bending. Higher bends less. Measured as XY bending modulus.",
+  str: "How much bending load it takes before it fails. Measured as XY bending strength.",
+  tough: "How much energy it absorbs from a hit or drop. Measured as XY impact strength.",
+  layer: "How well the layers resist splitting on impact. Measured as Z impact strength, so slow pulling across layers can behave differently.",
+  hdt: "Temperature where it starts to deform under a light load. Measured as HDT at 0.45 MPa on dried, annealed test bars.",
+  stretch: "How far a test bar stretches before it breaks, measured as XY elongation at break. It doesn't prove a part springs back.",
+  sag: "How well it resists slowly bending under a constant load over months, where 5 is best. This is my estimate, not lab data.",
+  cost: "Rough price band per kg, where 1 is cheapest.",
+  ease: "How forgiving it is to print. This is my estimate, not lab data.",
+  accuracy: "How closely parts match their design size and fit together. This is my estimate, not lab data.",
+  warp: "How well it resists lifting, bowing, and curling. This is my estimate, not lab data.",
+  surface: "How clean the surface looks straight off the printer. This is my estimate, not lab data.",
+  fume: "Rough risk from fumes while printing, where 1 is lowest. This is my estimate. It isn't a medical or safety rating, and every material still needs airflow.",
+  uvr: "How well it holds up in sunlight. This is my estimate from outdoor material guides.",
+  overhang: "Highest overhang angle listed on Bambu's data sheet. It isn't a side-by-side test, and PLA often overhangs better than its listed value suggests.",
+  bridge: "Longest unsupported span listed on Bambu's data sheet. It isn't a side-by-side test, and well-cooled PLA often bridges better than its listed value suggests.",
+  water: "How much water it absorbs at 25 °C and 55% humidity. Lower is usually better.",
+  speedMax: "Top print speed listed by Bambu. Real speed depends on the part, nozzle, and layer height."
+};
+const slotColor = (i) => "var(--m" + (i % 6 + 1) + ")";
+const visibleCols = (s) => COLS.filter((c) => s.cols.includes(c.id));
+const overText = (m) => m.overhang === null ? "Not confirmed" : m.overhang + "°, " + m.bridge + " mm";
+function rankCmp(col) {
+  return (a, b) => {
+    const va = a[col.id], vb = b[col.id];
+    if (va === null) return vb === null ? 0 : 1;
+    if (vb === null) return -1;
+    return col.low ? va - vb : vb - va;
+  };
+}
+const state = { mode: "any", place: "any", temp: 40, rank: "stiff", styrene: false, nodry: false, noanneal: false, creep: false, damp: false, selected: null, cmp: [], view: "rank", units: "real", showOut: false, panelOpen: false, spring: false, maxCost: 5, cols: ["stiff", "str", "tough", "layer", "hdt"] };
+const MARGIN = 10;
+const NO_HEAT_LIMIT = 40;
+const $ = (id) => document.getElementById(id);
+
+function reasonOut(m, s) {
+  if (s.spring && !m.springy) return "Not a spring-back pick";
+  if (UV_NEED[s.place] > 0 && !(m.uvr >= UV_NEED[s.place])) return m.uvr === null ? "UV resistance not covered" : s.place === "outdoors" ? "Less UV resistant than the ASA family" : "Too UV sensitive for partial shade";
+  if (m.hdt === null && s.temp > NO_HEAT_LIMIT) return "No heat value published";
+  if (m.hdt !== null && s.temp > NO_HEAT_LIMIT && m.hdt < s.temp + MARGIN) return "HDT " + m.hdt + " °C is too close to " + s.temp + " °C";
+  if (m.cost > s.maxCost) return "Over your cost limit";
+  if (s.styrene && m.styrene) return "Emits styrene";
+  if (s.nodry && m.dry === "Required") return "Must be dried first";
+  if (s.noanneal && m.anneal && s.temp > 60) return "Needs oven baking for this heat";
+  if (s.creep && m.sag < MIN_SAG) return "Sag resistance too low (" + m.sag + " of 5)";
+  if (s.damp && m.wetSoft) return "Loses about a third of its stiffness when wet";
+  return "";
+}
+
+function evaluate(s) {
+  if (s.mode === "flex") {
+    const flexBy = rankCmp(COLS.find((c) => c.id === s.rank));
+    const flexState = { ...s, temp: NO_HEAT_LIMIT, place: "any", creep: false, damp: false, spring: false };
+    const flexPass = [], flexOut = [];
+    TPUS.forEach((m) => {
+      const reason = reasonOut(m, flexState);
+      if (reason) flexOut.push({ m, reason }); else flexPass.push(m);
+    });
+    return { pass: flexPass.sort(flexBy), out: flexOut.concat(MATERIALS.map((m) => ({ m, reason: "Rigid material" }))) };
+  }
+  const pass = [], out = [];
+  (s.mode === "any" || s.spring ? MATERIALS.concat(TPUS) : MATERIALS).forEach((m) => {
+    const reason = reasonOut(m, s);
+    if (reason) out.push({ m, reason }); else pass.push(m);
+  });
+  const by = rankCmp(COLS.find((c) => c.id === s.rank));
+  pass.sort(by);
+  out.sort((a, b) => by(a.m, b.m));
+  return { pass, out };
+}
+
+function fixes(s) {
+  const list = [];
+  const count = (patch) => evaluate({ ...s, ...patch }).pass.length;
+  const add = (patch, label) => { const n = count(patch); if (n > 0) list.push({ patch, label: label + " (" + n + " " + (n === 1 ? "match" : "matches") + ")" }); };
+  if (s.maxCost < 5) add({ maxCost: 5 }, "Remove the cost limit");
+  if (s.spring) add({ spring: false }, "Allow stiffer materials");
+  if (s.styrene) add({ styrene: false }, "Allow styrene");
+  if (s.nodry) add({ nodry: false }, "Allow filament that needs drying");
+  if (s.noanneal) add({ noanneal: false }, "Allow oven baking");
+  if (s.creep) add({ creep: false }, "Drop the sustained load rule");
+  if (s.damp) add({ damp: false }, "Drop the damp rule");
+  if (s.place === "outdoors") add({ place: "shade" }, "Use partial shade");
+  if (UV_NEED[s.place] > 0) add({ place: "any" }, "Remove the sun limit");
+  for (let t = s.temp - 5; t >= NO_HEAT_LIMIT; t -= 5) {
+    if (count({ temp: t }) > 0) { add({ temp: t }, t === NO_HEAT_LIMIT ? "Remove the heat limit" : "Lower the limit to " + t + " °C"); break; }
+  }
+  return list;
+}
+
+const PLAIN_COLS = ["stiff", "str", "tough", "layer"];
+const isPlain = (p, s) => s.units === "plain" && PLAIN_COLS.includes(p.id);
+const plainRef = (p) => ({ name: "PLA", value: MATERIALS.find((x) => x.id === "pla")[p.id] });
+const unitText = (p, s) => isPlain(p, s) ? "× PLA Basic" : p.unit;
+function valueText(m, p, s) {
+  const v = m[p.id];
+  if (v === null) return null;
+  if (p.id === "stretch" && v >= 650) return ">" + v + " %";
+  if (!isPlain(p, s)) return v + " " + p.unit;
+  const ref = plainRef(p);
+  return (v / ref.value).toFixed(1) + "× " + ref.name;
+}
+const wideScale = (s) => s.mode === "flex" || ((s.mode === "any" || s.spring) && (s.showOut || TPUS.some((m) => !reasonOut(m, s))));
+function width(v, p, s) {
+  if (v === null) return 0;
+  const max = wideScale(s) && p.flexMax ? p.flexMax : p.max;
+  return Math.min(100, (v / max) * 100);
+}
+function bar(v, p, s, large) {
+  const marker = p.id === "hdt" && s.mode !== "flex" && s.temp > NO_HEAT_LIMIT ? '<b style="left:' + ((s.temp + MARGIN) / p.max * 100) + '%"></b>' : "";
+  return '<span class="bar' + (large ? " lg" : "") + '" aria-hidden="true"><i style="width:' + width(v, p, s) + '%"></i>' + marker + "</span>";
+}
+function chips(m) {
+  const c = [];
+  if (m.anneal) c.push('<span class="chip">bake for top heat</span>');
+  if (m.noAms) c.push('<span class="chip">no AMS</span>');
+  c.push('<span class="chip" title="' + COST_BAND[m.cost] + '">cost ' + m.cost + "/5</span>");
+  if (m.styrene) c.push('<span class="chip warn">styrene</span>');
+  if (m.uv) c.push('<span class="chip">good UV resistance</span>');
+  if (m.dry === "Required") c.push('<span class="chip">dry first</span>');
+  if (m.nozzle.startsWith("Hardened")) c.push('<span class="chip">hardened nozzle</span>');
+  return c.length ? '<span class="chips">' + c.join("") + "</span>" : "";
+}
+function rowHtml(m, s, rank, reason) {
+  const cells = visibleCols(s).map((p) => {
+    const on = p.id === s.rank;
+    return '<div class="cell' + (on ? " on" : "") + '"><span class="lab">' + p.name + '</span><span class="val">' + (valueText(m, p, s) ?? "n/a") + "</span>" + bar(m[p.id], p, s) + "</div>";
+  }).join("");
+  const num = rank && m[s.rank] !== null ? '<span class="rank">' + rank + "</span>" : "";
+  const open = state.selected === m.id;
+  const cls = "row" + (reason ? " out" : "") + (open ? " sel" : "");
+  return '<div class="' + cls + '" data-id="' + m.id + '"><div class="who"><button type="button" id="sel-' + m.id + '" aria-expanded="' + open + '">' + num + m.name + '<span class="chev" aria-hidden="true">' + (open ? "▾" : "▸") + "</span></button>" + chips(m) + (reason ? '<span class="reason">' + reason + "</span>" : "") + '<button type="button" class="vs-add" id="cmp-add-' + m.id + '" data-cmp="' + m.id + '" aria-pressed="' + state.cmp.includes(m.id) + '" aria-label="' + (state.cmp.includes(m.id) ? "Remove " + m.name + " from compare" : "Add " + m.name + " to compare") + '">' + (state.cmp.includes(m.id) ? "Remove from compare" : "Add to compare") + "</button></div>" + cells + "</div>" + (open ? detailHtml(m, s) : "");
+}
+
+function detailHtml(m, s) {
+  const stats = COLS.map((p) => {
+    const on = p.id === s.rank;
+    const head = COL_GROUP[p.id] ? '<p class="stat-group">' + COL_GROUP[p.id] + "</p>" : "";
+    return head + '<div class="stat' + (on ? " on" : "") + '"><span class="name">' + p.name + (p.low ? "<small>Lower is better</small>" : "") + "</span>" + bar(m[p.id], p, s, true) + '<span class="num">' + (valueText(m, p, s) ?? (p.missing || "Not published")) + "</span></div>";
+  }).join("");
+  const facts = [["Nozzle", m.nozzle], ["Nozzle temp", m.temp], ["Bed", m.bed], ["Drying", m.dry + ", " + m.dryAt], ["After getting wet", m.wet], ["Price band", COST_BAND[m.cost]]]
+    .map(([k, v]) => "<div><dt>" + k + "</dt><dd>" + v + "</dd></div>").join("");
+  return '<div class="detail"><p class="pick-why">' + m.why + '</p><p class="uses"><b>Great for</b><span>' + m.uses + '</span></p><div class="pick-body"><div class="stats">' + stats + '</div><dl class="facts">' + facts + "</dl></div>" +
+    '<p class="air' + (m.styrene ? " warn" : "") + '"><b>Air</b><span>' + m.air + "</span></p></div>";
+}
+
+function renderPick(res, s) {
+  const empty = $("empty");
+  if (res.pass.length) { empty.hidden = true; return; }
+  empty.hidden = false;
+  const f = fixes(s);
+  f.push({ patch: { mode: "any", spring: false, place: "any", temp: NO_HEAT_LIMIT, maxCost: 5, styrene: false, nodry: false, noanneal: false, creep: false, damp: false }, label: "Clear all limits" });
+  empty.innerHTML = "<h2>No filament passes</h2><p>" + (f.length > 1 ? "These conditions rule out every material. Change one rule to get a match." : "These limits conflict, so no single change gives a match.") + "</p>" +
+    '<div class="fixes">' + f.map((x, i) => '<button type="button" id="fix-' + i + '" data-fix="' + i + '">' + x.label + "</button>").join("") + "</div>";
+  empty.querySelectorAll("[data-fix]").forEach((b) => b.addEventListener("click", () => { Object.assign(state, f[+b.dataset.fix].patch, { selected: null }); render(); }));
+}
+
+function renderTable(res, s) {
+  const head = '<div class="row head"><span>' + "Rank by" + "</span>" + visibleCols(s).map((p) =>
+    '<button type="button" id="sort-' + p.id + '" data-rank="' + p.id + '" aria-describedby="head-tip" aria-pressed="' + (p.id === s.rank) + '">' + p.name + "<small>" + unitText(p, s) + (p.low ? ", low first" : "") + "</small></button>").join("") + "</div>";
+  const pass = res.pass.map((m, i) => rowHtml(m, s, i + 1)).join("");
+  const showOut = s.showOut;
+  const toggle = res.out.length ? '<button type="button" class="out-toggle" id="out-toggle" aria-expanded="' + showOut + '"><span>Ruled out (' + res.out.length + ")</span><span>" + (showOut ? "Hide" : "Show why") + "</span></button>" : "";
+  const out = showOut ? res.out.map((o) => rowHtml(o.m, s, 0, o.reason)).join("") : "";
+  $("table").style.setProperty("--cols", visibleCols(s).length);
+  $("table").style.setProperty("--table-w", $("table").clientWidth + "px");
+  $("table").innerHTML = (res.pass.length || showOut ? head : "") + pass + toggle + out;
+  $("table").querySelectorAll("[data-id]").forEach((row) => row.addEventListener("click", () => {
+    state.selected = state.selected === row.dataset.id ? null : row.dataset.id;
+    render();
+    const again = $("sel-" + row.dataset.id);
+    if (again) again.focus({ preventScroll: true });
+  }));
+  $("table").querySelectorAll("[data-cmp]").forEach((b) => b.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const id = b.dataset.cmp;
+    state.cmp = state.cmp.includes(id) ? state.cmp.filter((x) => x !== id) : state.cmp.concat(id);
+    render();
+    const again = $("cmp-add-" + id);
+    if (again) again.focus({ preventScroll: true });
+  }));
+  if ($("out-toggle")) $("out-toggle").addEventListener("click", () => { state.showOut = !state.showOut; render(); $("out-toggle").focus({ preventScroll: true }); });
+  $("table").querySelectorAll("[data-rank]").forEach((b) => b.addEventListener("click", () => {
+    const id = b.dataset.rank;
+    if (b.getAttribute("aria-disabled") === "true") { showHeadTip(b); return; }
+    state.rank = id; state.selected = null; render();
+    const again = $("sort-" + id);
+    again.focus({ preventScroll: true });
+    showHeadTip(again);
+  }));
+  const sideways = $("table").scrollWidth > $("table").clientWidth + 1 ? " Scroll the table sideways to see every column." : "";
+  $("sheet-note").textContent = (sideways ? sideways.trim() + " " : "") + (s.mode !== "flex"
+    ? "Select a row for print settings." + (s.temp > NO_HEAT_LIMIT ? " The amber line on each heat bar marks " + (s.temp + MARGIN) + " °C, your limit plus a " + MARGIN + " °C margin." : "") + (wideScale(s) ? " Toughness and layer bars use a wider scale here, to fit TPU." : "")
+    : "Sun, heat, load, and damp filters don't apply here, because TPU has no comparable data for them. Toughness and layer bars use a wider scale to fit TPU.");
+}
+
+function compareList(res) {
+  const list = state.cmp.map((id) => ALL.find((m) => m.id === id)).filter(Boolean);
+  const ranked = res.pass.concat(res.out.map((o) => o.m), TPUS);
+  for (const m of ranked) {
+    if (list.length >= 2) break;
+    if (!list.includes(m)) list.push(m);
+  }
+  return list;
+}
+
+function conditionText(m, res) {
+  if (res.pass.includes(m)) return "Passes";
+  const entry = res.out.find((o) => o.m === m);
+  return entry ? entry.reason : "Flexible material";
+}
+
+function joinWords(list) {
+  if (list.length < 2) return list.join("");
+  return list.slice(0, -1).join(", ") + " and " + list[list.length - 1];
+}
+
+function isClose(p, x, y) {
+  if (p.scale || p.exact) return x === y;
+  if (p.id === "stretch" && x >= 650 && y >= 650) return true;
+  return p.id === "hdt" ? Math.abs(x - y) < 3 : Math.abs(x - y) / Math.min(x, y) < 0.05;
+}
+
+function deltaText(p, value, base) {
+  if (value === null || base === null) return { text: "No comparison", won: false };
+  if (p.id === "stretch" && Math.min(value, base) >= 650) return { text: "Same range", won: false };
+  if (p.id === "stretch" && Math.max(value, base) >= 650) return { text: value > base ? "Far higher" : "Far lower", won: value > base };
+  if (isClose(p, value, base)) return { text: p.scale || p.exact ? "Same" : "About even", won: false };
+  const sign = value > base ? "+" : "−";
+  const gap = Math.abs(value - base);
+  const size = p.id === "hdt" ? gap + " °C" : p.scale ? String(gap) : p.exact ? gap + " " + p.unit : Math.round(gap / base * 100) + "%";
+  return { text: sign + size, won: p.low ? value < base : value > base };
+}
+
+function setCompare(ids, focusId) {
+  state.cmp = ids;
+  render();
+  const again = focusId && $(focusId);
+  if (again) again.focus({ preventScroll: true });
+}
+
+function renderCompareSlots(list, res) {
+  const ids = list.map((m) => m.id);
+  const options = (id) => ALL.map((m) => '<option value="' + m.id + '"' + (m.id === id ? " selected" : "") + ">" + m.name + "</option>").join("");
+  $("vs-slots").innerHTML = list.map((m, i) => '<div class="vs-slot"><label class="vs-field" for="cmp-slot-' + i + '"><span><span class="vs-dot" aria-hidden="true" style="background:' + slotColor(i) + '"></span>' + (i === 0 ? "Baseline" : "Material " + (i + 1)) + (i >= state.cmp.length ? " (suggested)" : "") + '</span><select id="cmp-slot-' + i + '" data-slot="' + i + '">' + options(m.id) + "</select></label>" +
+    '<div class="vs-slot-acts">' + (i > 0 ? '<button type="button" id="cmp-base-' + i + '" data-base="' + i + '">Make baseline</button>' : "") + (list.length > 2 ? '<button type="button" id="cmp-drop-' + i + '" data-drop="' + i + '" aria-label="Remove ' + m.name + '">Remove</button>' : "") + "</div></div>").join("");
+  $("cmp-more").hidden = list.length >= ALL.length;
+  $("vs-slots").querySelectorAll("select").forEach((el) => el.addEventListener("change", () => {
+    const i = +el.dataset.slot, next = ids.slice(), other = next.indexOf(el.value);
+    if (other >= 0) next[other] = next[i];
+    next[i] = el.value;
+    setCompare(next, el.id);
+  }));
+  $("vs-slots").querySelectorAll("[data-base]").forEach((b) => b.addEventListener("click", () => {
+    const i = +b.dataset.base, next = ids.slice();
+    next.unshift(next.splice(i, 1)[0]);
+    setCompare(next, "cmp-slot-0");
+  }));
+  $("vs-slots").querySelectorAll("[data-drop]").forEach((b) => b.addEventListener("click", () => {
+    setCompare(ids.filter((id, i) => i !== +b.dataset.drop), "cmp-slot-0");
+  }));
+}
+
+function renderCompare(res, s) {
+  const list = compareList(res);
+  const base = list[0], n = list.length;
+  const hasTpu = list.some((m) => TPUS.includes(m));
+  renderCompareSlots(list, res);
+  const leads = new Map(list.map((m) => [m, []]));
+  const dot = (m) => '<span class="vs-dot" aria-hidden="true" style="background:' + slotColor(list.indexOf(m)) + '"></span>';
+  const nameTag = (m) => '<span class="vs-name">' + dot(m) + m.name + "</span>";
+  const stats = COLS.map((p) => {
+    const max = hasTpu && p.flexMax ? p.flexMax : p.max;
+    const pct = (v) => Math.min(100, v / max * 100);
+    const nums = list.map((m) => m[p.id]).filter((v) => v !== null);
+    const best = nums.length ? (p.low ? Math.min(...nums) : Math.max(...nums)) : null;
+    const spread = nums.length > 1 && !nums.every((v) => isClose(p, v, best));
+    const leaders = spread ? list.filter((m) => m[p.id] !== null && isClose(p, m[p.id], best)) : [];
+    if (leaders.length === 1 && PROPS.includes(p)) leads.get(leaders[0]).push(p.name.toLowerCase());
+    const sides = list.map((m, i) => {
+      const v = m[p.id];
+      const refs = i > 0 ? [0] : list.slice(1).map((other, j) => j + 1);
+      const tick = v === null ? "" : refs.filter((j) => list[j][p.id] !== null).map((j) => '<b class="vs-mark" style="left:' + pct(list[j][p.id]) + "%;background:" + slotColor(j) + '"></b>').join("");
+      const delta = i === 0 ? { text: "Baseline", won: false } : deltaText(p, v, base[p.id]);
+      return '<div class="vs-side' + (leaders.includes(m) ? " lead" : "") + '">' + nameTag(m) + '<span class="vs-val">' + (valueText(m, p, s) ?? (p.missing || "Not published")) + '</span><span class="bar lg" aria-hidden="true"><i style="width:' + (v === null ? 0 : pct(v)) + '%"></i>' + tick + '</span><span class="vs-delta' + (delta.won ? " won" : "") + '">' + delta.text + "</span></div>";
+    }).join("");
+    return (COL_GROUP[p.id] ? groupRow(COL_GROUP[p.id]) : "") + '<div class="vs-row"><span class="vs-label">' + p.name + (p.low ? "<small>Lower is better</small>" : "") + "</span>" + sides + "</div>";
+  }).join("");
+  const facts = [
+    ["Nozzle", (m) => m.nozzle],
+    ["Nozzle temp", (m) => m.temp],
+    ["Bed", (m) => m.bed],
+    ["Drying", (m) => m.dry + ", " + m.dryAt],
+    ["After getting wet", (m) => m.wet],
+    ["Styrene-based", (m) => m.styrene ? "Yes" : "No"],
+    ["Air", (m) => m.air]
+  ].map(factRow).join("");
+  const glance = [
+    ["Your conditions", (m) => conditionText(m, res)],
+    ["Great for", (m) => m.uses],
+    ["Watch for", (m) => chips(m)]
+  ].map(factRow).join("");
+  function factRow([label, get]) { return '<div class="vs-row fact"><span class="vs-label">' + label + "</span>" + list.map((m) => '<div class="vs-side">' + nameTag(m) + '<span class="vs-val">' + get(m) + "</span></div>").join("") + "</div>"; }
+  const grid = $("vs-grid");
+  grid.style.setProperty("--n", n);
+  grid.classList.toggle("many", n > 2);
+  grid.innerHTML = '<div class="vs-row head"><span class="vs-label"></span>' + list.map((m) => "<span>" + dot(m) + m.name + "</span>").join("") + "</div>" + groupRow("At a glance") + glance + stats + groupRow("Print setup") + facts;
+  const said = list.filter((m) => leads.get(m).length).map((m) => m.name + " leads on " + joinWords(leads.get(m)) + ".");
+  const quiet = n === 2 ? list.filter((m) => !leads.get(m).length).map((m) => m.name + " has no clear lead.") : [];
+  $("vs-summary").textContent = said.length ? said.concat(quiet).join(" ") : "These materials are too close to separate on the published numbers.";
+  $("vs-hint").textContent = "Differences are measured against the baseline. Each tick marks another material's value, in that material's color, so the baseline's bar shows the others and their bars show the baseline. Gaps under 5%, or under 3 °C for heat, count as about even because test results vary." + (hasTpu ? " Toughness and layer bars use a wider scale here, to fit TPU." : "");
+}
+
+function conditionSummary(s) {
+  if (s.mode === "flex") return "Rubbery part";
+  const rules = ["styrene", "nodry", "noanneal", "creep", "damp"].filter((k) => s[k]).length;
+  const parts = [];
+  if (s.spring) parts.push("Spring back");
+  else if (s.mode === "rigid") parts.push("Rigid");
+  if (s.place === "shade") parts.push("Partial shade");
+  if (s.place === "outdoors") parts.push("In the sun");
+  if (s.temp > NO_HEAT_LIMIT) parts.push("up to " + s.temp + " °C");
+  if (s.maxCost < 5) parts.push("cost up to " + s.maxCost);
+  if (rules) parts.push(rules + (rules === 1 ? " rule" : " rules") + " on");
+  return parts.length ? parts.join(", ") : "No limits set";
+}
+
+function renderControls(s, res) {
+  document.querySelectorAll(".rigid-only").forEach((el) => { el.hidden = s.mode === "flex"; });
+  document.querySelectorAll("#mode button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === (s.spring ? "spring" : s.mode)));
+  document.querySelectorAll("#place button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === s.place));
+  document.querySelectorAll("#colpick button").forEach((b) => {
+    const on = s.cols.includes(b.dataset.v);
+    b.setAttribute("aria-pressed", on);
+    b.setAttribute("aria-disabled", on && s.cols.length === 1);
+  });
+  document.querySelectorAll("#maxcost button").forEach((b) => b.setAttribute("aria-pressed", +b.dataset.v === s.maxCost));
+  document.querySelectorAll("#units button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === s.units));
+  document.querySelectorAll("#views button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === s.view));
+  $("tab-rank").textContent = "Ranking (" + res.pass.length + ")";
+  $("tab-compare").textContent = s.cmp.length ? "Compare (" + s.cmp.length + ")" : "Compare";
+  $("view-rank").hidden = s.view !== "rank";
+  $("versus").hidden = s.view !== "compare";
+  $("panel").classList.toggle("closed", !s.panelOpen);
+  $("panel-toggle").setAttribute("aria-expanded", s.panelOpen);
+  $("panel-summary").textContent = conditionSummary(s);
+  $("panel-action").textContent = s.panelOpen ? "Done" : "Change";
+  $("temp").value = s.temp;
+  $("temp-out").textContent = s.temp > NO_HEAT_LIMIT ? s.temp + " °C" : "No heat limit";
+  $("temp-out").classList.toggle("off", s.temp <= NO_HEAT_LIMIT);
+  ["styrene", "nodry", "noanneal", "creep", "damp"].forEach((k) => { $(k).checked = s[k]; });
+}
+
+function render() {
+  const res = evaluate(state);
+  renderControls(state, res);
+  renderPick(res, state);
+  renderTable(res, state);
+  renderCompare(res, state);
+}
+
+const ALL = MATERIALS.concat(TPUS);
+let resizeFrame = 0;
+window.addEventListener("resize", () => {
+  cancelAnimationFrame(resizeFrame);
+  resizeFrame = requestAnimationFrame(render);
+});
+$("cmp-more").addEventListener("click", () => {
+  const res = evaluate(state), list = compareList(res);
+  const next = res.pass.concat(res.out.map((o) => o.m), TPUS).find((m) => !list.includes(m));
+  if (next) setCompare(list.concat(next).map((m) => m.id), "cmp-slot-" + list.length);
+});
+$("colpick").innerHTML = '<span class="colpick-label">Columns</span>' + COLS.map((c) => '<button type="button" id="col-' + c.id + '" data-v="' + c.id + '" aria-describedby="col-tip">' + c.name + "</button>").join("") + '<div class="col-tip" id="col-tip" role="tooltip" hidden></div>';
+function showHeadTip(b) {
+  const tip = $("head-tip"), view = $("view-rank");
+  const box = view.getBoundingClientRect(), r = b.getBoundingClientRect();
+  tip.textContent = COL_TIPS[b.dataset.rank];
+  tip.hidden = false;
+  tip.style.top = r.bottom - box.top + 5 + "px";
+  tip.style.left = Math.max(0, Math.min(r.left - box.left, box.width - tip.offsetWidth)) + "px";
+}
+$("table").addEventListener("mouseover", (e) => {
+  const b = e.target.closest("[data-rank]");
+  if (b) showHeadTip(b); else $("head-tip").hidden = true;
+});
+$("table").addEventListener("focusin", (e) => { const b = e.target.closest("[data-rank]"); if (b) showHeadTip(b); });
+$("table").addEventListener("mouseleave", () => { $("head-tip").hidden = true; });
+$("table").addEventListener("focusout", () => { $("head-tip").hidden = true; });
+function showColTip(b) {
+  const tip = $("col-tip");
+  tip.textContent = COL_TIPS[b.dataset.v];
+  tip.hidden = false;
+  tip.style.top = b.offsetTop + b.offsetHeight + 5 + "px";
+  tip.style.left = Math.max(0, Math.min(b.offsetLeft, $("colpick").clientWidth - tip.offsetWidth)) + "px";
+}
+$("colpick").addEventListener("mouseover", (e) => { const b = e.target.closest("button"); if (b) showColTip(b); });
+$("colpick").addEventListener("focusin", (e) => { const b = e.target.closest("button"); if (b) showColTip(b); });
+$("colpick").addEventListener("mouseleave", () => { $("col-tip").hidden = true; });
+$("colpick").addEventListener("focusout", () => { $("col-tip").hidden = true; });
+$("colpick").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  showColTip(b);
+  if (b.getAttribute("aria-disabled") === "true") return;
+  const id = b.dataset.v;
+  state.cols = state.cols.includes(id) ? state.cols.filter((c) => c !== id) : state.cols.concat(id);
+  if (!state.cols.includes(state.rank)) state.rank = visibleCols(state)[0].id;
+  render();
+});
+$("maxcost").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.maxCost = +b.dataset.v; state.selected = null; render();
+});
+$("units").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.units = b.dataset.v; render();
+});
+$("panel").addEventListener("submit", (e) => e.preventDefault());
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { $("col-tip").hidden = true; $("head-tip").hidden = true; } });
+document.documentElement.lang = "en";
+$("panel-toggle").addEventListener("click", () => { state.panelOpen = !state.panelOpen; render(); });
+$("views").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.view = b.dataset.v; render();
+});
+$("mode").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  const active = state.spring ? "spring" : state.mode;
+  const next = b.dataset.v === active ? "any" : b.dataset.v;
+  state.spring = next === "spring";
+  state.mode = state.spring ? "rigid" : next;
+  if (state.spring) state.rank = "tough";
+  if (state.mode === "flex" && TPUS.every((m) => m[state.rank] === null)) state.rank = "tough";
+  if (!state.cols.includes(state.rank)) state.cols = state.cols.concat(state.rank);
+  state.selected = null; render();
+});
+[["place", "place"]].forEach(([el, key]) => {
+  $(el).addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    state[key] = state[key] === b.dataset.v ? "any" : b.dataset.v; state.selected = null; render();
+  });
+});
+$("temp").addEventListener("input", (e) => { state.temp = +e.target.value; state.selected = null; render(); });
+$("presets").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.temp = +b.dataset.t; state.selected = null; render();
+});
+["styrene", "nodry", "noanneal", "creep", "damp"].forEach((k) => $(k).addEventListener("change", (e) => { state[k] = e.target.checked; state.selected = null; render(); }));
+render();
+</script>
