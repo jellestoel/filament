@@ -128,6 +128,7 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
 .pick-value small { display: block; font: 400 12.5px/1.3 var(--font-body); color: var(--muted); }
 .pick-why { margin: 0; max-width: 65ch; }
 .uses { display: flex; flex-wrap: wrap; gap: 2px 8px; margin: 0; max-width: 72ch; font-size: 14px; }
+.uses.avoid b { color: var(--warn); }
 .uses b { font-weight: 600; color: var(--accent); white-space: nowrap; }
 .pick-body { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; }
 .stats { display: grid; gap: 10px; align-content: start; }
@@ -452,7 +453,7 @@ html:not(.kbd) :focus { outline: none; }
         <li>Heat is HDT at 0.45 MPa, a light load. A material only passes if its HDT is at least 10 °C above your temperature, so heavily loaded parts need more margin.</li>
         <li>Compared to PLA divides stiffness, strength, toughness, and layer adhesion by PLA Basic's values, so 2.0× means double. Bars don't change. Other columns keep their normal units.</li>
         <li>Bars in a column share one scale, starting at zero, so lengths compare directly. Toughness and layer bars widen their scale when TPU is shown, and a note says when.</li>
-        <li>Great for lines are examples, not approval of a specific part. Test anything load-bearing or safety-related.</li>
+        <li>Avoid for lines are rules of thumb worked out from the numbers on this page, so a good design can sometimes get around them. Great for lines are examples, not approval of a specific part. Test anything load-bearing or safety-related.</li>
         <li>Passing only means a material matches the rules set here. It doesn't prove a real part will work.</li>
         <li>PET-CF, PAHT-CF, PA6-CF, and PA6-GF values come from annealed test bars, so all of their numbers, not just heat, may be lower on an unbaked part. Bambu suggests annealing printed parts at about 80 to 130 °C for 5 to 12 hours, so an unannealed part may soften earlier. Bambu doesn't publish how much earlier.</li>
         <li>Values come from Bambu Lab test bars at 100% infill. Real parts, and other brands, will differ.</li>
@@ -824,6 +825,21 @@ function bar(v, p, s, large) {
   const marker = p.id === "hdt" && s.mode !== "flex" && s.temp > NO_HEAT_LIMIT ? '<b style="left:' + ((s.temp + MARGIN) / p.max * 100) + '%"></b>' : "";
   return '<span class="bar' + (large ? " lg" : "") + '" aria-hidden="true"><i style="width:' + width(v, p, s) + '%"></i>' + marker + "</span>";
 }
+function avoidFor(m) {
+  const a = [];
+  if (m.wetSoft) a.push("damp places");
+  if (m.stiff === null) a.push("parts that must stay rigid");
+  if (m.layer < 6) a.push("loads across the layers");
+  if (m.tough < 20) a.push("parts that take hits");
+  if (m.hdt === null) a.push("hot places");
+  else if (m.hdt < 90) a.push("hot cars");
+  if (m.uvr !== null && m.uvr <= 2) a.push("long outdoor use");
+  if (m.sag <= 2) a.push("loads held for months");
+  if (m.stiff !== null && m.stiff < 2000) a.push("parts that must stay stiff");
+  if (m.stiff !== null && !m.springy) a.push("clips and snap fits");
+  const text = a.slice(0, 3).join(", ");
+  return text ? text[0].toUpperCase() + text.slice(1) : "";
+}
 function chips(m, watchOnly) {
   const c = [];
   if (m.anneal) c.push('<span class="chip">bake for specs</span>');
@@ -855,7 +871,7 @@ function detailHtml(m, s) {
   }).join("");
   const facts = [["Nozzle", m.nozzle], ["Nozzle temp", m.temp], ["Bed", m.bed], ["Drying", m.dry + ", " + m.dryAt], ["If the filament gets wet", m.wet], ["Price band", COST_BAND[m.cost]]]
     .map(([k, v]) => "<div><dt>" + k + "</dt><dd>" + v + "</dd></div>").join("");
-  return '<div class="detail"><p class="pick-why">' + m.why + '</p><p class="uses"><b>Great for</b><span>' + m.uses + '</span></p><p class="air' + (m.fume >= 4 ? " warn" : "") + '"><b>Fumes</b><span>' + m.air + '</span></p><div class="pick-body"><div class="stats">' + stats + '</div><dl class="facts">' + facts + "</dl></div></div>";
+  return '<div class="detail"><p class="pick-why">' + m.why + '</p><p class="uses"><b>Great for</b><span>' + m.uses + '</span></p>' + (avoidFor(m) ? '<p class="uses avoid"><b>Avoid for</b><span>' + avoidFor(m) + "</span></p>" : "") + '<p class="air' + (m.fume >= 4 ? " warn" : "") + '"><b>Fumes</b><span>' + m.air + '</span></p><div class="pick-body"><div class="stats">' + stats + '</div><dl class="facts">' + facts + "</dl></div></div>";
 }
 
 function renderPick(res, s) {
@@ -1015,6 +1031,7 @@ function renderCompare(res, s) {
   const glance = [
     ["Your conditions", (m) => conditionText(m, res)],
     ["Great for", (m) => m.uses],
+    ["Avoid for", (m) => avoidFor(m) || "Nothing flagged"],
     ["Watch for", (m) => chips(m, true) || "Nothing flagged"]
   ].map(factRow).join("");
   function factRow([label, get]) { return '<div class="vs-row fact"><span class="vs-label">' + label + "</span>" + list.map((m) => '<div class="vs-side">' + nameTag(m) + '<span class="vs-val">' + get(m) + "</span></div>").join("") + "</div>"; }
