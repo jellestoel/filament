@@ -164,6 +164,9 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
   background: var(--sheet); color: var(--ink); font-size: 12.5px; line-height: 1.4;
 }
 .col-toggle { display: none; justify-self: start; padding: 6px 10px; border: 1px solid var(--line); border-radius: 4px; background: transparent; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.fam { display: flex; flex-wrap: wrap; gap: 4px; }
+.fam button { padding: 4px 9px; border: 1px solid var(--line); border-radius: 4px; background: transparent; font-size: 13px; color: var(--muted); }
+.fam button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); font-weight: 600; }
 .colpick-label { margin-right: 4px; font-size: 12.5px; font-weight: 600; }
 .colpick button { padding: 3px 8px; border: 1px solid var(--line); border-radius: 4px; background: transparent; font-size: 12.5px; color: var(--muted); }
 .colpick button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); font-weight: 600; }
@@ -245,6 +248,9 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
 .fixes { display: flex; flex-wrap: wrap; gap: 8px; }
 .fixes button { border: 0; border-radius: 4px; padding: 7px 12px; background: var(--accent); color: var(--on-accent); font-size: 13.5px; font-weight: 600; }
 
+.notes-box { border-top: 1px solid var(--line); padding-top: 12px; }
+.notes-box summary { cursor: pointer; width: fit-content; font: 600 1.05rem/1.2 var(--font-display); color: var(--ink); }
+.notes-box[open] summary { margin-bottom: 14px; }
 .notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; font-size: 13.5px; color: var(--muted); }
 .notes h3 { margin: 0 0 6px; font: 600 1.05rem/1.2 var(--font-display); color: var(--ink); }
 .notes ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; }
@@ -289,6 +295,20 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
   .vs-grid.many .vs-name { display: block; }
 }
 html:not(.kbd) :focus { outline: none; }
+.finder { width: min(560px, calc(100vw - 32px)); max-height: min(70vh, 560px); margin: 10vh auto 0; padding: 0; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--sheet); color: var(--ink); overflow: hidden; }
+.finder[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+.finder::backdrop { background: rgb(0 0 0 / 0.45); }
+.finder input { box-sizing: border-box; width: 100%; padding: 14px 16px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); font: 400 16px var(--font-body); }
+.finder ul { margin: 0; padding: 6px; list-style: none; overflow-y: auto; }
+.finder li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1px 12px; padding: 8px 10px; border-radius: 5px; cursor: pointer; }
+.finder li b { font-weight: 600; }
+.finder li small { grid-column: 1; color: var(--muted); font-size: 12.5px; }
+.finder li span { grid-column: 2; grid-row: 1 / span 2; align-self: center; max-width: 190px; color: var(--muted); font-size: 12.5px; text-align: right; }
+.finder li span.out { color: var(--warn); }
+.finder li[aria-selected="true"] { background: var(--accent-soft); }
+.finder-empty { padding: 14px 10px; color: var(--muted); }
+.finder-hint { padding: 8px 16px; border-top: 1px solid var(--line); }
+@media (hover: none) { .finder-hint { display: none; } }
 </style>
 
 <div class="wrap">
@@ -342,6 +362,20 @@ html:not(.kbd) :focus { outline: none; }
       </fieldset>
 
       <fieldset class="group">
+        <legend>Filament type</legend>
+        <div class="fam" id="fam">
+          <button type="button" id="fam-any" data-v="any">Any</button>
+          <button type="button" id="fam-pla" data-v="PLA">PLA</button>
+          <button type="button" id="fam-petg" data-v="PETG">PETG</button>
+          <button type="button" id="fam-abs" data-v="ABS/ASA">ABS/ASA</button>
+          <button type="button" id="fam-pc" data-v="PC">PC</button>
+          <button type="button" id="fam-pa" data-v="PA/PET">PA/PET</button>
+          <button type="button" id="fam-tpu" data-v="TPU">TPU</button>
+        </div>
+        <p class="hint">Pick one or more.</p>
+      </fieldset>
+
+      <fieldset class="group">
         <legend>Max price</legend>
         <div class="seg" id="maxcost">
           <button type="button" id="cost-5" data-v="5">Any</button>
@@ -361,6 +395,12 @@ html:not(.kbd) :focus { outline: none; }
       </fieldset>
       </div>
     </form>
+
+    <dialog class="finder" id="finder" aria-label="Search filament">
+      <input type="search" id="finder-input" placeholder="Search filament, like wood or carbon" aria-label="Search filament" aria-controls="finder-list" autocomplete="off" spellcheck="false">
+      <ul id="finder-list" role="listbox" aria-label="Matching filament"></ul>
+      <p class="hint finder-hint">Use the arrow keys to move, Enter to open, and Esc to close.</p>
+    </dialog>
 
     <div class="results">
       <div class="topbar">
@@ -397,6 +437,8 @@ html:not(.kbd) :focus { outline: none; }
     </div>
   </div>
 
+  <details class="notes-box">
+  <summary>How to read the numbers, and sources</summary>
   <footer class="notes">
     <div>
       <h3>How to read the numbers</h3>
@@ -504,6 +546,7 @@ html:not(.kbd) :focus { outline: none; }
       </ul>
     </div>
   </footer>
+  </details>
 </div>
 
 <script>
@@ -689,12 +732,14 @@ function rankCmp(col) {
     return gap || (col.id === "bend" ? b.str / b.stiff - a.str / a.stiff : 0);
   };
 }
-const state = { colsOpen: false, mode: "any", place: "any", temp: 40, rank: "ease", ams: false, styrene: false, nodry: false, noanneal: false, creep: false, damp: false, selected: null, cmp: [], view: "rank", units: "real", showOut: false, panelOpen: false, spring: false, maxCost: 5, cols: ["stiff", "str", "tough", "layer", "hdt", "ease", "cost"] };
+const state = { colsOpen: false, fam: [], mode: "any", place: "any", temp: 40, rank: "ease", ams: false, styrene: false, nodry: false, noanneal: false, creep: false, damp: false, selected: null, cmp: [], view: "rank", units: "real", showOut: false, panelOpen: false, spring: false, maxCost: 5, cols: ["stiff", "str", "tough", "layer", "hdt", "ease", "cost"] };
 const MARGIN = 10;
 const NO_HEAT_LIMIT = 40;
 const $ = (id) => document.getElementById(id);
 
+const familyOf = (m) => m.id.startsWith("pla") ? "PLA" : m.id.startsWith("petg") ? "PETG" : /^(abs|asa)/.test(m.id) ? "ABS/ASA" : /^pc/.test(m.id) ? "PC" : m.id.startsWith("tpu") ? "TPU" : "PA/PET";
 function reasonOut(m, s) {
+  if (s.fam.length && !s.fam.includes(familyOf(m))) return "Not a chosen filament type";
   if (s.spring && !m.springy) return "Not a spring-back pick";
   if (UV_NEED[s.place] > 0 && !(m.uvr >= UV_NEED[s.place])) return m.uvr === null ? "UV resistance not covered" : s.place === "outdoors" ? (m.uvr >= 3 ? "OK for simple outdoor items, not for years in full sun" : "Less UV resistant than the ASA family") : "Too UV sensitive for partial shade";
   if (m.hdt === null && s.temp > NO_HEAT_LIMIT) return "No heat value published";
@@ -737,6 +782,7 @@ function fixes(s) {
   const add = (patch, label) => { const n = count(patch); if (n > 0) list.push({ patch, label: label + " (" + n + " " + (n === 1 ? "match" : "matches") + ")" }); };
   if (s.maxCost < 5) add({ maxCost: 5 }, "Remove the cost limit");
   if (s.spring) add({ spring: false }, "Allow stiffer materials");
+  if (s.fam.length) add({ fam: [] }, "Show all filament types");
   if (s.ams) add({ ams: false }, "Allow filament without AMS");
   if (s.styrene) add({ styrene: false }, "Allow styrene");
   if (s.nodry) add({ nodry: false }, "Allow filament that needs drying");
@@ -777,7 +823,7 @@ function bar(v, p, s, large) {
 }
 function chips(m, watchOnly) {
   const c = [];
-  if (m.anneal) c.push('<span class="chip">bake for full specs</span>');
+  if (m.anneal) c.push('<span class="chip">bake for specs</span>');
   if (m.noAms) c.push('<span class="chip">no AMS</span>');
   if (!watchOnly) c.push('<span class="chip" title="Rough price">' + COST_BAND[m.cost] + "</span>");
   if (m.styrene) c.push('<span class="chip warn">styrene</span>');
@@ -814,7 +860,7 @@ function renderPick(res, s) {
   if (res.pass.length) { empty.hidden = true; return; }
   empty.hidden = false;
   const f = fixes(s);
-  f.push({ patch: { mode: "any", spring: false, place: "any", temp: NO_HEAT_LIMIT, maxCost: 5, ams: false, styrene: false, nodry: false, noanneal: false, creep: false, damp: false }, label: "Clear all limits" });
+  f.push({ patch: { mode: "any", spring: false, place: "any", temp: NO_HEAT_LIMIT, fam: [], maxCost: 5, ams: false, styrene: false, nodry: false, noanneal: false, creep: false, damp: false }, label: "Clear all limits" });
   empty.innerHTML = "<h2>No filament passes</h2><p>" + (f.length > 1 ? "These conditions rule out every material. Change one rule to get a match." : "These limits conflict, so no single change gives a match.") + "</p>" +
     '<div class="fixes">' + f.map((x, i) => '<button type="button" id="fix-' + i + '" data-fix="' + i + '">' + x.label + "</button>").join("") + "</div>";
   empty.querySelectorAll("[data-fix]").forEach((b) => b.addEventListener("click", () => { Object.assign(state, f[+b.dataset.fix].patch, { selected: null }); render(); }));
@@ -856,7 +902,7 @@ function renderTable(res, s) {
   }));
   const sideways = $("table").scrollWidth > $("table").clientWidth + 1 ? " Scroll the table sideways to see every column." : "";
   $("sheet-note").textContent = (sideways ? sideways.trim() + " " : "") + (s.mode !== "flex"
-    ? "Select a row for print settings." + (s.temp > NO_HEAT_LIMIT ? " The amber line on each heat bar marks " + (s.temp + MARGIN) + " °C, your limit plus a " + MARGIN + " °C margin." : "") + (wideScale(s) ? " Toughness and layer bars use a wider scale here, to fit TPU." : "") + (s.spring ? " Bend range is a rough group, so test real clips. TPU for AMS has no bend data, but it does spring back." : "")
+    ? "Select a row for print settings." + (matchMedia("(hover: hover)").matches ? " Press " + FINDER_KEY + " to search." : "") + (s.temp > NO_HEAT_LIMIT ? " The amber line on each heat bar marks " + (s.temp + MARGIN) + " °C, your limit plus a " + MARGIN + " °C margin." : "") + (wideScale(s) ? " Toughness and layer bars use a wider scale here, to fit TPU." : "") + (s.spring ? " Bend range is a rough group, so test real clips. TPU for AMS has no bend data, but it does spring back." : "")
     : "Sun, heat, load, and damp filters don't apply here, because TPU has no comparable data for them. Toughness and layer bars use a wider scale to fit TPU.");
 }
 
@@ -985,6 +1031,7 @@ function conditionSummary(s) {
   const parts = [];
   if (s.spring) parts.push("Spring back");
   else if (s.mode === "rigid") parts.push("Rigid");
+  if (s.fam.length) parts.push(s.fam.join(" + "));
   if (s.place === "shade") parts.push("Partial shade");
   if (s.place === "outdoors") parts.push("In the sun");
   if (s.temp > NO_HEAT_LIMIT) parts.push("up to " + s.temp + " °C");
@@ -1007,6 +1054,7 @@ function renderControls(s, res) {
     b.setAttribute("aria-disabled", on && s.cols.length === 1);
   });
   document.querySelectorAll("#maxcost button").forEach((b) => b.setAttribute("aria-pressed", +b.dataset.v === s.maxCost));
+  document.querySelectorAll("#fam button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === "any" ? !s.fam.length : s.fam.includes(b.dataset.v)));
   document.querySelectorAll("#units button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === s.units));
   document.querySelectorAll("#views button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === s.view));
   $("tab-rank").textContent = "Ranking (" + res.pass.length + ")";
@@ -1032,6 +1080,57 @@ function render() {
 }
 
 const ALL = MATERIALS.concat(TPUS);
+
+const FINDER_KEY = /Mac/.test(navigator.platform) ? "⌘K" : "Ctrl K";
+const finder = $("finder"), finderInput = $("finder-input"), finderList = $("finder-list");
+let finderHits = [], finderIndex = 0;
+function finderMatches(query) {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const hits = (text) => { const parts = text.toLowerCase().split(/[^a-z0-9+]+/); return words.every((w) => parts.some((part) => part.startsWith(w))); };
+  return ALL.filter((m) => hits(m.name + " " + m.kind)).sort((a, b) => hits(b.name) - hits(a.name));
+}
+function renderFinder() {
+  const res = evaluate(state);
+  finderHits = finderMatches(finderInput.value);
+  finderIndex = Math.min(finderIndex, Math.max(finderHits.length - 1, 0));
+  finderList.innerHTML = finderHits.length ? finderHits.map((m, i) => {
+    const out = res.out.find((o) => o.m === m);
+    return '<li role="option" id="finder-' + i + '" data-i="' + i + '" aria-selected="' + (i === finderIndex) + '"><b>' + m.name + "</b><small>" + m.kind + '</small><span class="' + (out ? "out" : "") + '">' + (out ? out.reason : COST_BAND[m.cost]) + "</span></li>";
+  }).join("") : '<li class="finder-empty" role="presentation">No filament found.</li>';
+  finderInput.setAttribute("aria-activedescendant", finderHits.length ? "finder-" + finderIndex : "");
+  const on = finderList.querySelector('[aria-selected="true"]');
+  if (on) on.scrollIntoView({ block: "nearest" });
+}
+function openFinder() {
+  if (finder.open) { finder.close(); return; }
+  finderInput.value = ""; finderIndex = 0;
+  finder.showModal();
+  renderFinder();
+  finderInput.focus();
+}
+function pickFinder(m) {
+  if (!m) return;
+  const out = evaluate(state).out.some((o) => o.m === m);
+  finder.close();
+  state.view = "rank";
+  state.selected = m.id;
+  if (out) state.showOut = true;
+  render();
+  const row = $("sel-" + m.id);
+  if (row) { row.focus({ preventScroll: true }); row.scrollIntoView({ block: "center" }); }
+}
+finderInput.addEventListener("input", () => { finderIndex = 0; renderFinder(); });
+finderInput.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    if (finderHits.length) { finderIndex = (finderIndex + (e.key === "ArrowDown" ? 1 : finderHits.length - 1)) % finderHits.length; renderFinder(); }
+  } else if (e.key === "Enter") { e.preventDefault(); pickFinder(finderHits[finderIndex]); }
+});
+finderList.addEventListener("click", (e) => { const li = e.target.closest("[data-i]"); if (li) pickFinder(finderHits[+li.dataset.i]); });
+finder.addEventListener("click", (e) => { if (e.target === finder) finder.close(); });
+document.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "k") { e.preventDefault(); openFinder(); }
+});
 let resizeFrame = 0;
 window.addEventListener("resize", () => {
   cancelAnimationFrame(resizeFrame);
@@ -1079,6 +1178,12 @@ $("colpick").addEventListener("click", (e) => {
   state.cols = state.cols.includes(id) ? state.cols.filter((c) => c !== id) : state.cols.concat(id);
   if (!state.cols.includes(state.rank)) state.rank = visibleCols(state)[0].id;
   render();
+});
+$("fam").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  const v = b.dataset.v;
+  state.fam = v === "any" ? [] : state.fam.includes(v) ? state.fam.filter((x) => x !== v) : state.fam.concat(v);
+  state.selected = null; render();
 });
 $("maxcost").addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b) return;
