@@ -1,3 +1,4 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Bambu Filament Picker</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -282,6 +283,7 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
   <header>
     <h1>Bambu Filament Picker</h1>
     <p class="lede">Set the conditions your part has to survive. Filament that can't cope drops out, and the rest rank by what you need most.</p>
+    <p class="hint">Prices are rough estimates for a single roll, without sales or bulk discounts.</p>
   </header>
 
   <div class="layout" role="main">
@@ -330,12 +332,11 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
         <legend>Highest cost</legend>
         <div class="seg" id="maxcost">
           <button type="button" id="cost-5" data-v="5">Any</button>
-          <button type="button" id="cost-1" data-v="1">1</button>
-          <button type="button" id="cost-2" data-v="2">2</button>
-          <button type="button" id="cost-3" data-v="3">3</button>
-          <button type="button" id="cost-4" data-v="4">4</button>
+          <button type="button" id="cost-1" data-v="1">~€20</button>
+          <button type="button" id="cost-2" data-v="2">~€30</button>
+          <button type="button" id="cost-3" data-v="3">~€40</button>
         </div>
-        <p class="hint">1 is about $25/kg or less, and 4 is up to about $90/kg.</p>
+        <p class="hint">Rough price per kg. Big Bambu sales can be much cheaper.</p>
       </fieldset>
 
       <fieldset class="group">
@@ -402,7 +403,7 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
         <li>Fume risk is my rough 1 to 5 estimate of print emissions, where 1 is lowest. It leans on limited studies and base polymers, and it isn't a medical or safety rating. Brand, color, and nozzle temperature all change emissions.</li>
         <li>UV resistance is a 1 to 5 estimate from outdoor material guides. In the sun needs 5, and partial shade needs at least 3. With no sun exposure selected, UV rules nothing out. Color, grade, and climate all change the result, and stabilized PC or nylon can last much longer.</li>
         <li>Overhang and bridging are the limits listed on Bambu's data sheets, not a side-by-side test, so small differences may not hold on real prints.</li>
-        <li>Cost is a rough 1 to 5 band based on retail prices per kg seen in November 2026. Prices vary by shop, region, sale, and spool size, and the bands ignore how much material a part uses.</li>
+        <li>Cost bands are rounded euros per kg before shipping, for a single 1 kg roll without sales or bulk discounts. They were checked against regular EU shop prices in November 2026. Plain TPU 95A uses the 95A HF price as a proxy. TPU for AMS prices varied a lot, so its band is a middle estimate. PLA Silk Dual is also an estimate, because the only price found came from a shop that ran high on other filaments. Prices vary by shop.</li>
         <li>Bed ranges are for textured PEI on base grades. PLA variants use the range from their own data sheets.</li>
         <li>Color can shift these numbers, especially on specialty colors, so treat each row as typical for that product.</li>
         <li>After getting wet notes are general guidance, except the nylon warning, which comes from Bambu's drying guide.</li>
@@ -434,14 +435,28 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
         <li><a href="https://cdn.shopify.com/s/files/1/1339/4265/files/Bambu_TPU_for_AMS_Technical_Data_Sheet.pdf">Bambu TPU for AMS data sheet</a></li>
         <li><a href="https://store.bblcdn.eu/s8/default/8140c9d50a6049a3b634fa1387518d8d/Bambu_TPU_90A_Technical_Data_Sheet_582bf8f6-1f0a-474c-aeda-9e72af3689dc.pdf">Bambu TPU 90A data sheet</a></li>
         <li><a href="https://c.cdnmp.net/828809388/content/Info/BambuLab/Bambu_TPU_85A_Technical_Data_Sheet_a7233668-497b-487f-af8a-3adb49fafaa1.pdf">Bambu TPU 85A data sheet</a></li>
-        <li><a href="https://shop3duniverse.com/products/bambu-lab-tpu-85a-1-75mm-1kg">TPU 85A notes and price at 3D Universe</a></li>
+        <li><a href="https://shop3duniverse.com/products/bambu-lab-tpu-85a-1-75mm-1kg">TPU 85A notes at 3D Universe</a></li>
         <li><a href="https://www.3djake.com/info/guide/outdoor-ready-filaments-for-weather-resistant-3d-prints">Outdoor filament guide at 3DJake</a></li>
         <li><a href="https://jlc3dp.com/blog/best-3d-printing-filament-outdoor-use">PLA, PETG, and ASA outdoor guide at JLC3DP</a></li>
-        <li><a href="https://shop3duniverse.com/collections/bambu-lab-filaments">Bambu filament prices at 3D Universe</a></li>
         <li><a href="https://www.igo3d.com/en/bambu-lab-paht-cf-filament-en">PAHT-CF price at iGo3D</a></li>
-        <li><a href="https://shop3duniverse.com/products/bambu-lab-pet-cf-1-75mm-1kg-black">PET-CF price at 3D Universe</a></li>
-        <li><a href="https://ultimate3dprintingstore.com/products/bambu-lab-pa6-cf-filament">PA6-CF price at Ultimate 3D Printing Store</a></li>
-        <li><a href="https://ultimate3dprintingstore.com/products/bambu-lab-asa-cf-filament-1-75mm-1kg-black">ASA-CF price at Ultimate 3D Printing Store</a></li>
+        <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-paht-cf-black-1-75mm-1kg-with-spool-210000005766">PAHT-CF price at Makerpoint</a></li>
+        <li><a href="https://elektronicavoorjou.nl/en/product/bambu-lab-paht-cf-black-with-coil-1kg">PAHT-CF price at Elektronica voor jou</a></li>
+        <li><a href="https://makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-pa6-cf-black-1-75mm-1kg-with-spool-210000005768">PA6-CF price at Makerpoint</a></li>
+        <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-pet-cf-black-1-75mm-1kg-with-spool-210000005633">PET-CF price at Makerpoint</a></li>
+        <li><a href="https://makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-petg-cf-black-1-75mm-1kg-with-spool-210000005776">PETG-CF price at Makerpoint</a></li>
+        <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-petg-hf-black-1-75mm-1kg-with-spool-210000006588">PETG HF price at Makerpoint</a></li>
+        <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-tpu-hf-red-1-75mm-1kg-with-spool-210000005761">TPU 95A HF price at Makerpoint</a></li>
+        <li><a href="https://elektronicavoorjou.nl/en/product/bambu-lab-tpu-95a-hf-gray-with-coil-1kg/">TPU 95A HF price at Elektronica voor jou</a></li>
+        <li><a href="https://filament2print.com/de/flexibel-tpe-tpu/3682-ams-tpu-bambulab.html">TPU for AMS price at Filament2Print</a></li>
+        <li><a href="https://aio.lv/en/product--bambulab-bml-26185--11972977.md">TPU for AMS price at AIO.lv</a></li>
+        <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-abs-black-1-75mm-1kg-with-spool-210000005737">ABS price at Makerpoint</a></li>
+        <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-asa-black-1-75mm-1kg-with-spool-210000005746">ASA price at Makerpoint</a></li>
+        <li><a href="https://www.3d-drucker-experte.de/en/consumables/manufacturers/bambu-lab/bambu-lab-absasa/bambu-lab-asa-cf/4248/bambu-lab-asa-cf-filament-black-1kg-1.75-mm-with-spool">ASA-CF price at 3D-Drucker-Experte</a></li>
+        <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-pc-black-1-75mm-1kg-with-spool-210000005755">PC price at Makerpoint</a></li>
+        <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-pla-cf-black-1-75mm-1kg-with-spool-210000005769">PLA-CF price at Makerpoint</a></li>
+        <li><a href="https://aio.lv/en/product--bambulab-bml-24623--11983096.md">PLA Silk Dual price at AIO.lv</a></li>
+        <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-tpu-90a-black-1kg-with-spool-210000007712">TPU 90A price at Makerpoint</a></li>
+        <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-tpu-85a-black-1-75mm-1kg-with-spool-210000008072">TPU 85A price at Makerpoint</a></li>
       </ul>
     </div>
   </footer>
@@ -487,10 +502,10 @@ const TPUS = [
   { ...TPU, id: "tpu-85a", name: "TPU 85A", kind: "Very soft flexible, Shore 85A", tough: 124.3, layer: 88.5, water: 0.67, temp: "200 to 250 °C", bed: "30 to 35 °C", speed: "Under 200 mm/s", nozzle: "0.6 mm or larger", noAms: true, why: "The softest here, for parts that should feel rubbery. It's the hardest to print, and Bambu warns against using Unload, so follow its unloading steps.", air: "Not compared in the studies used here. Ventilate the room while printing." }
 ];
 
-const COST = { "petg-hf": 1, "tpu-hf": 3, "tpu-ams": 3, "tpu-90a": 3, "tpu-85a": 3, pla: 1, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 1, "pla-metal": 1, "pla-tough": 1, petg: 1, abs: 1, asa: 2, "pla-cf": 2, "petg-cf": 2, "asa-cf": 3, pc: 3, tpu: 3, "pa6-cf": 4, "pet-cf": 4, "paht-cf": 5 };
-const COST_BAND = { 1: "about $25/kg or less", 2: "about $26 to $35/kg", 3: "about $36 to $45/kg", 4: "about $46 to $90/kg", 5: "over about $90/kg" };
+const COST = { "petg-hf": 2, "tpu-hf": 3, "tpu-ams": 3, "tpu-90a": 3, "tpu-85a": 3, pla: 1, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 2, "pla-metal": 2, "pla-tough": 2, petg: 1, abs: 1, asa: 2, "pla-cf": 2, "petg-cf": 3, "asa-cf": 3, pc: 3, tpu: 3, "pa6-cf": 4, "pet-cf": 4, "paht-cf": 4 };
+const COST_BAND = { 1: "around €20/kg", 2: "around €30/kg", 3: "around €40/kg", 4: "around €100/kg" };
 MATERIALS.concat(TPUS).forEach((m) => { m.cost = COST[m.id]; });
-const costText = (m) => m.cost + " of 5, " + COST_BAND[m.cost];
+const costText = (m) => m.cost + " of 4, " + COST_BAND[m.cost];
 const OVERHANG = { "petg-hf": 70, "tpu-hf": 55, "tpu-ams": 70, "tpu-90a": 40, "tpu-85a": 40, pla: 55, "pla-cf": 55, "pla-matte": 55, "pla-silk": 55, "pla-silk-dual": 55, "pla-metal": 55, "pla-tough": 55, petg: 70, "petg-cf": 70, abs: 70, asa: 70, "asa-cf": 70, pc: 70, "pet-cf": 70, "paht-cf": 70, "pa6-cf": 70, tpu: 70 };
 const BRIDGE = { "petg-hf": 30, "tpu-hf": 20, "tpu-ams": 20, "tpu-90a": 10, "tpu-85a": 10, pla: 30, "pla-cf": 30, "pla-matte": 30, "pla-silk": 30, "pla-silk-dual": 30, "pla-metal": 30, "pla-tough": 30, petg: 30, "petg-cf": 30, abs: 40, asa: 40, "asa-cf": 40, pc: 40, "pet-cf": 30, "paht-cf": 40, "pa6-cf": 40, tpu: 20 };
 const EASE = { "petg-hf": 4, "tpu-hf": 2, "tpu-ams": 3, "tpu-90a": 1, "tpu-85a": 1, pla: 5, "pla-matte": 5, "pla-metal": 5, "pla-silk": 4, "pla-silk-dual": 4, "pla-tough": 4, "pla-cf": 4, petg: 4, "petg-cf": 4, abs: 3, asa: 3, "asa-cf": 3, pc: 2, tpu: 2, "pet-cf": 2, "paht-cf": 2, "pa6-cf": 1 };
@@ -546,7 +561,7 @@ MATERIALS.concat(TPUS).forEach((m) => { m.sag = SAG[m.id]; });
 const COLS = PROPS.concat([
   { id: "stretch", name: "Stretch before break", unit: "%", most: "stretchiest", max: 35 },
   { id: "sag", name: "Sag resistance", unit: "of 5, est.", most: "most sag resistant", max: 5, scale: true },
-  { id: "cost", name: "Cost", unit: "of 5", most: "cheapest", max: 5, low: true, scale: true },
+  { id: "cost", name: "Cost", unit: "of 4", most: "cheapest", max: 4, low: true, scale: true },
   { id: "ease", name: "Ease", unit: "of 5, est.", most: "easiest to print", max: 5, scale: true },
   { id: "accuracy", name: "Accuracy and fit", unit: "of 5, est.", most: "most accurate", max: 5, scale: true },
   { id: "warp", name: "Warp resistance", unit: "of 5, est.", most: "most warp resistant", max: 5, scale: true },
@@ -570,7 +585,7 @@ const COL_TIPS = {
   hdt: "Temperature where it starts to deform under a light load. Measured as HDT at 0.45 MPa on dried, annealed test bars.",
   stretch: "How far a test bar stretches before it breaks, measured as XY elongation at break. It doesn't prove a part springs back.",
   sag: "How well it resists slowly bending under a constant load over months, where 5 is best. This is my estimate, not lab data.",
-  cost: "Rough price band per kg, where 1 is cheapest.",
+  cost: "Rough price per kg, from 1 at about €20 to 4 at about €100.",
   ease: "How forgiving it is to print. This is my estimate, not lab data.",
   accuracy: "How closely parts match their design size and fit together. This is my estimate, not lab data.",
   warp: "How well it resists lifting, bowing, and curling. This is my estimate, not lab data.",
@@ -679,7 +694,7 @@ function chips(m) {
   const c = [];
   if (m.anneal) c.push('<span class="chip">bake for top heat</span>');
   if (m.noAms) c.push('<span class="chip">no AMS</span>');
-  c.push('<span class="chip" title="' + COST_BAND[m.cost] + '">cost ' + m.cost + "/5</span>");
+  c.push('<span class="chip" title="Rough price, cost ' + m.cost + ' of 4">' + COST_BAND[m.cost].replace("around ", "~") + "</span>");
   if (m.styrene) c.push('<span class="chip warn">styrene</span>');
   if (m.uv) c.push('<span class="chip">good UV resistance</span>');
   if (m.dry === "Required") c.push('<span class="chip">dry first</span>');
@@ -885,7 +900,7 @@ function conditionSummary(s) {
   if (s.place === "shade") parts.push("Partial shade");
   if (s.place === "outdoors") parts.push("In the sun");
   if (s.temp > NO_HEAT_LIMIT) parts.push("up to " + s.temp + " °C");
-  if (s.maxCost < 5) parts.push("cost up to " + s.maxCost);
+  if (s.maxCost < 5) parts.push("up to " + COST_BAND[s.maxCost].replace("around ", "~"));
   if (rules) parts.push(rules + (rules === 1 ? " rule" : " rules") + " on");
   return parts.length ? parts.join(", ") : "No limits set";
 }
@@ -1012,3 +1027,5 @@ $("presets").addEventListener("click", (e) => {
 ["styrene", "nodry", "noanneal", "creep", "damp"].forEach((k) => $(k).addEventListener("change", (e) => { state[k] = e.target.checked; state.selected = null; render(); }));
 render();
 </script>
+
+</body></html>
