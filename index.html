@@ -132,6 +132,7 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
 .stats { display: grid; gap: 10px; align-content: start; }
 .stat-group { margin: 8px 0 0; font: 600 0.98rem/1.2 var(--font-display); }
 .stat-group:first-child { margin-top: 0; }
+.stat .name { cursor: help; }
 .stat .name small { display: block; font-size: 11.5px; color: var(--muted); }
 .stat { display: grid; grid-template-columns: 118px minmax(0, 1fr) 108px; gap: 10px; align-items: center; font-size: 13.5px; }
 .stat .num { font: 500 13px var(--font-data); text-align: right; font-variant-numeric: tabular-nums; }
@@ -161,6 +162,7 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
   position: absolute; z-index: 5; width: min(320px, 100%); padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: 4px;
   background: var(--sheet); color: var(--ink); font-size: 12.5px; line-height: 1.4;
 }
+.col-toggle { display: none; justify-self: start; padding: 6px 10px; border: 1px solid var(--line); border-radius: 4px; background: transparent; font-size: 13.5px; font-weight: 600; color: var(--ink); }
 .colpick-label { margin-right: 4px; font-size: 12.5px; font-weight: 600; }
 .colpick button { padding: 3px 8px; border: 1px solid var(--line); border-radius: 4px; background: transparent; font-size: 12.5px; color: var(--muted); }
 .colpick button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); font-weight: 600; }
@@ -196,7 +198,8 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
 .chip { font: 400 11px/1.5 var(--font-data); padding: 0 5px; border-radius: 3px; border: 1px solid var(--line); color: var(--muted); }
 .chip.warn { border-color: var(--warn); color: var(--warn); }
 .reason { font-size: 12.5px; line-height: 1.3; color: var(--warn); }
-.row .who button.vs-add { justify-self: start; font: 500 12.5px/1.3 var(--font-body); color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.row .who button.vs-add { justify-self: start; font: 500 12.5px/1.3 var(--font-body); color: var(--muted); }
+.row .who button.vs-add:hover, .row .who button.vs-add:focus-visible { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 .out .who button { color: var(--muted); }
 .cell { display: grid; gap: 4px; min-width: 0; }
 .cell .lab { display: none; font-size: 12.5px; color: var(--muted); }
@@ -213,7 +216,8 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
 .vs-pick { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: start; }
 .vs-slot { display: grid; gap: 5px; min-width: 0; }
 .vs-slot-acts { display: flex; flex-wrap: wrap; gap: 3px 10px; min-height: 18px; }
-.vs-slot-acts button { padding: 0; border: 0; background: transparent; font-size: 12.5px; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.vs-slot-acts button { padding: 0; border: 0; background: transparent; font-size: 12.5px; color: var(--muted); }
+.vs-slot-acts button:hover, .vs-slot-acts button:focus-visible { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 .vs-field { display: grid; gap: 3px; min-width: 0; font-size: 12.5px; color: var(--muted); }
 .vs-field select { width: 100%; padding: 7px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--plate); color: var(--ink); font: 600 1rem var(--font-display); }
 .vs-swap { justify-self: start; padding: 7px 12px; border: 1px solid var(--line); border-radius: 4px; background: transparent; font-size: 13.5px; }
@@ -254,6 +258,9 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
   .panel.closed .panel-body { display: none; }
 }
 @media (max-width: 700px) {
+  .col-toggle { display: block; }
+  .colpick:not(.open) { display: none; }
+  .colpick-label { display: none; }
   .panel-body { grid-template-columns: minmax(0, 1fr); }
   .pick-body, .notes { grid-template-columns: minmax(0, 1fr); }
   .row { grid-template-columns: minmax(0, 1fr); gap: 6px; padding-block: 12px; min-width: 0; }
@@ -363,6 +370,7 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
       <div class="view" id="view-rank">
         <div class="col-tip" id="head-tip" role="tooltip" hidden></div>
         <section class="empty" id="empty" aria-live="polite" hidden></section>
+        <button type="button" class="col-toggle" id="col-toggle" aria-controls="colpick" aria-expanded="false"></button>
         <div class="colpick" id="colpick" aria-label="Choose ranking columns"></div>
         <section aria-label="Material ranking">
           <div class="table" id="table"></div>
@@ -417,6 +425,9 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
       <h3>Sources</h3>
       <ul>
         <li><a href="https://cdn1.bambulab.com/filament/a5e185aed14e6/filament-guide-en-4.pdf">Bambu Filament Guide</a></li>
+        <li><a href="https://chemicalinsights.org/wp-content/uploads/2022/03/3DPrinting_BasicFacts.pdf">3D printing basic facts at Chemical Insights</a></li>
+        <li><a href="https://ul.org/news/comprehensive-emissions-data-material-extrusion-3d-printing-now-available">UL emissions data summary</a></li>
+        <li><a href="https://inchem.org:443/documents/icsc/icsc/eics0118.htm">Caprolactam safety card</a></li>
         <li><a href="https://www.lesimprimantes3d.fr/dl/Bambu_ABS-GF_Technical_Data_Sheet.pdf">Bambu ABS-GF data sheet</a></li>
         <li><a href="https://www.additive-x.com/shop/mpattachments/file/viewonline/id/886/product_id/2694">Bambu PA6-GF data sheet</a></li>
         <li><a href="https://www.additive-x.com/shop/mpattachments/file/viewonline/id/916/product_id/2729">Bambu PPA-CF data sheet</a></li>
@@ -510,8 +521,8 @@ const MATERIALS = [
   { id: "pc-fr", name: "PC FR", kind: "Flame-retardant polycarbonate", stiff: 1890, str: 90, tough: 55, layer: 8, hdt: 113, water: 0.12, dry: "Required", dryAt: "80 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "260 to 280 °C", bed: "90 to 110 °C", speed: "Under 300 mm/s", why: "Rated UL 94 V-0 for flame resistance. That rates the material, and it doesn't prove a finished part is fire safe. It's tougher than PC, but less stiff and strong.", air: "Not compared in the studies used here. Ventilate the room while printing." },
   { id: "pet-cf", name: "PET-CF", anneal: true, noAms: true, kind: "Carbon-fiber PET", stiff: 5320, str: 131, tough: 36, layer: 4.5, hdt: 205, water: 0.37, dry: "Required", dryAt: "80 °C, 8 to 12 h", nozzle: "Hardened steel, 0.6 mm recommended", temp: "260 to 300 °C", bed: "70 to 100 °C", speed: "Under 100 mm/s", why: "Very heat resistant, and it absorbs little water. Layer adhesion is among the weakest here, so keep the main load along the layers.", air: "Not compared in the studies used here. Ventilate the room while printing." },
   { id: "paht-cf", name: "PAHT-CF", anneal: true, kind: "Carbon-fiber nylon, PA12 based", stiff: 4230, str: 125, tough: 57.5, layer: 13.3, hdt: 194, water: 0.88, dry: "Required", dryAt: "80 °C, 8 to 12 h", nozzle: "Hardened steel, 0.6 mm recommended", temp: "260 to 300 °C", bed: "100 to 120 °C", speed: "Under 100 mm/s", why: "The best all-rounder here, with high numbers in every column. It keeps most of its stiffness when damp, at about 3640 MPa.", air: "UL listed some nylons among high total-VOC emitters. Ventilate the room while printing." },
-  { id: "pa6-cf", name: "PA6-CF", anneal: true, noAms: true, kind: "Carbon-fiber nylon, PA6 based", stiff: 5460, str: 151, tough: 40.3, layer: 15.5, hdt: 186, water: 2.35, dry: "Required", dryAt: "80 °C, 8 to 12 h", nozzle: "Hardened steel, 0.6 mm recommended", temp: "260 to 300 °C", bed: "100 to 120 °C", speed: "Under 100 mm/s", wetSoft: true, why: "Among the stiffest and strongest here when dry. It absorbs a lot of water, and its stiffness drops to about 3560 MPa when wet.", air: "UL listed some nylons among high total-VOC emitters, and some studies found caprolactam from nylon, though not all. Ventilate the room while printing." },
-  { id: "pa6-gf", name: "PA6-GF", anneal: true, kind: "Glass-fiber nylon, PA6 based", stiff: 3670, str: 120, tough: 27.2, layer: 4.1, hdt: 182, water: 2.56, dry: "Required", dryAt: "80 °C, 8 to 12 h", nozzle: "Hardened steel, 0.6 mm recommended", temp: "260 to 290 °C", bed: "80 to 100 °C", speed: "Under 130 mm/s", wetSoft: true, why: "Strong and heat resistant, and cheaper than PA6-CF, but less stiff. It absorbs the most water here, and its layer adhesion is weak.", air: "UL listed some nylons among high total-VOC emitters, and some studies found caprolactam from nylon, though not all. Ventilate the room while printing." },
+  { id: "pa6-cf", name: "PA6-CF", anneal: true, noAms: true, kind: "Carbon-fiber nylon, PA6 based", stiff: 5460, str: 151, tough: 40.3, layer: 15.5, hdt: 186, water: 2.35, dry: "Required", dryAt: "80 °C, 8 to 12 h", nozzle: "Hardened steel, 0.6 mm recommended", temp: "260 to 300 °C", bed: "100 to 120 °C", speed: "Under 100 mm/s", wetSoft: true, why: "Among the stiffest and strongest here when dry. It absorbs a lot of water, and its stiffness drops to about 3560 MPa when wet.", air: "UL names nylon as a high particle emitter, and its research found caprolactam, an irritant, among nylon's highest emissions. It can exceed indoor air guidelines, so print in a well-ventilated room and don't stay next to the printer." },
+  { id: "pa6-gf", name: "PA6-GF", anneal: true, kind: "Glass-fiber nylon, PA6 based", stiff: 3670, str: 120, tough: 27.2, layer: 4.1, hdt: 182, water: 2.56, dry: "Required", dryAt: "80 °C, 8 to 12 h", nozzle: "Hardened steel, 0.6 mm recommended", temp: "260 to 290 °C", bed: "80 to 100 °C", speed: "Under 130 mm/s", wetSoft: true, why: "Strong and heat resistant, and cheaper than PA6-CF, but less stiff. It absorbs the most water here, and its layer adhesion is weak.", air: "UL names nylon as a high particle emitter, and its research found caprolactam, an irritant, among nylon's highest emissions. It can exceed indoor air guidelines, so print in a well-ventilated room and don't stay next to the printer." },
   { id: "ppa-cf", name: "PPA-CF", noAms: true, kind: "Carbon-fiber high-heat nylon", stiff: 9860, str: 208, tough: 41.7, layer: 4.3, hdt: 227, water: 1.3, dry: "Required", dryAt: "100 to 140 °C, 8 to 12 h", nozzle: "Hardened steel, 0.6 mm recommended", temp: "280 to 310 °C", bed: "100 to 120 °C", speed: "Under 100 mm/s", why: "By far the stiffest, strongest, and most heat resistant here, even unbaked. It's also the priciest, and layer adhesion is weak. On the X2D, use the main extruder, which stops at 300 °C.", air: "Not compared in the studies used here. Ventilate the room while printing." }
 ];
 
@@ -539,7 +550,7 @@ const ACCURACY = { "tpu-hf": 1, "tpu-ams": 2, "tpu-90a": 1, "tpu-85a": 1, pla: 5
 const WARP = { "tpu-hf": 4, "tpu-ams": 4, "tpu-90a": 4, "tpu-85a": 4, pla: 5, "pla-cf": 5, "pla-matte": 5, "pla-silk": 5, "pla-silk-dual": 5, "pla-metal": 5, "pla-tough": 5, petg: 4, "petg-cf": 5, abs: 2, asa: 3, "asa-cf": 4, pc: 2, "pet-cf": 4, "paht-cf": 3, "pa6-cf": 2, tpu: 4, "abs-gf": 3, "pa6-gf": 2, "ppa-cf": 3, "pc-fr": 2, "asa-aero": 2, "petg-matte": 4 };
 const SURFACE = { "tpu-hf": 2, "tpu-ams": 3, "tpu-90a": 2, "tpu-85a": 2, pla: 4, "pla-cf": 4, "pla-matte": 5, "pla-silk": 5, "pla-silk-dual": 5, "pla-metal": 5, "pla-tough": 4, petg: 3, "petg-cf": 4, abs: 4, asa: 4, "asa-cf": 4, pc: 3, "pet-cf": 4, "paht-cf": 4, "pa6-cf": 4, tpu: 2, "abs-gf": 3, "pa6-gf": 3, "ppa-cf": 4, "pc-fr": 3, "asa-aero": 2, "petg-matte": 5 };
 const UV_SCORE = { "tpu-hf": null, "tpu-ams": null, "tpu-90a": null, "tpu-85a": null, pla: 1, "pla-cf": 1, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 1, "pla-metal": 1, "pla-tough": 1, petg: 3, "petg-cf": 3, abs: 2, asa: 5, "asa-cf": 5, pc: 3, "pet-cf": 3, "paht-cf": 2, "pa6-cf": 2, tpu: null, "abs-gf": 2, "pa6-gf": 2, "ppa-cf": 2, "pc-fr": 3, "asa-aero": 5, "petg-matte": 3 };
-const FUME = { "tpu-hf": 2, "tpu-ams": 2, "tpu-90a": 2, "tpu-85a": 2, pla: 1, "pla-cf": 1, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 1, "pla-metal": 1, "pla-tough": 2, petg: 2, "petg-cf": 2, tpu: 2, pc: 3, "pet-cf": 3, "paht-cf": 3, "pa6-cf": 3, asa: 4, "asa-cf": 4, abs: 5, "abs-gf": 5, "pa6-gf": 3, "ppa-cf": 3, "pc-fr": 3, "asa-aero": 4, "petg-matte": 2 };
+const FUME = { "tpu-hf": 2, "tpu-ams": 2, "tpu-90a": 2, "tpu-85a": 2, pla: 1, "pla-cf": 1, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 1, "pla-metal": 1, "pla-tough": 2, petg: 2, "petg-cf": 2, tpu: 2, pc: 3, "pet-cf": 3, "paht-cf": 3, "pa6-cf": 4, asa: 4, "asa-cf": 4, abs: 5, "abs-gf": 5, "pa6-gf": 4, "ppa-cf": 3, "pc-fr": 3, "asa-aero": 4, "petg-matte": 2 };
 MATERIALS.concat(TPUS).forEach((m) => { m.fume = FUME[m.id]; });
 const USES = {
   pla: "Test prints, trial fits, desk organizers, display models",
@@ -645,7 +656,7 @@ function rankCmp(col) {
     return gap || (col.id === "bend" ? b.tough - a.tough : 0);
   };
 }
-const state = { mode: "any", place: "any", temp: 40, rank: "ease", styrene: false, nodry: false, noanneal: false, creep: false, damp: false, selected: null, cmp: [], view: "rank", units: "real", showOut: false, panelOpen: false, spring: false, maxCost: 5, cols: ["stiff", "str", "tough", "layer", "hdt", "ease", "cost"] };
+const state = { colsOpen: false, mode: "any", place: "any", temp: 40, rank: "ease", styrene: false, nodry: false, noanneal: false, creep: false, damp: false, selected: null, cmp: [], view: "rank", units: "real", showOut: false, panelOpen: false, spring: false, maxCost: 5, cols: ["stiff", "str", "tough", "layer", "hdt", "ease", "cost"] };
 const MARGIN = 10;
 const NO_HEAT_LIMIT = 40;
 const $ = (id) => document.getElementById(id);
@@ -729,13 +740,14 @@ function bar(v, p, s, large) {
   const marker = p.id === "hdt" && s.mode !== "flex" && s.temp > NO_HEAT_LIMIT ? '<b style="left:' + ((s.temp + MARGIN) / p.max * 100) + '%"></b>' : "";
   return '<span class="bar' + (large ? " lg" : "") + '" aria-hidden="true"><i style="width:' + width(v, p, s) + '%"></i>' + marker + "</span>";
 }
-function chips(m) {
+function chips(m, watchOnly) {
   const c = [];
   if (m.anneal) c.push('<span class="chip">bake for top heat</span>');
   if (m.noAms) c.push('<span class="chip">no AMS</span>');
-  c.push('<span class="chip" title="Rough price">' + COST_BAND[m.cost] + "</span>");
+  if (!watchOnly) c.push('<span class="chip" title="Rough price">' + COST_BAND[m.cost] + "</span>");
   if (m.styrene) c.push('<span class="chip warn">styrene</span>');
-  if (m.uv) c.push('<span class="chip">good UV resistance</span>');
+  else if (m.fume >= 4) c.push('<span class="chip warn">strong fumes</span>');
+  if (m.uv && !watchOnly) c.push('<span class="chip">good UV resistance</span>');
   if (m.dry === "Required") c.push('<span class="chip">dry first</span>');
   if (m.nozzle.startsWith("Hardened")) c.push('<span class="chip">hardened nozzle</span>');
   return c.length ? '<span class="chips">' + c.join("") + "</span>" : "";
@@ -748,19 +760,18 @@ function rowHtml(m, s, rank, reason) {
   const num = rank && m[s.rank] !== null ? '<span class="rank">' + rank + "</span>" : "";
   const open = state.selected === m.id;
   const cls = "row" + (reason ? " out" : "") + (open ? " sel" : "");
-  return '<div class="' + cls + '" data-id="' + m.id + '"><div class="who"><button type="button" id="sel-' + m.id + '" aria-expanded="' + open + '">' + num + m.name + '<span class="chev" aria-hidden="true">' + (open ? "▾" : "▸") + "</span></button>" + chips(m) + (reason ? '<span class="reason">' + reason + "</span>" : "") + '<button type="button" class="vs-add" id="cmp-add-' + m.id + '" data-cmp="' + m.id + '" aria-pressed="' + state.cmp.includes(m.id) + '" aria-label="' + (state.cmp.includes(m.id) ? "Remove " + m.name + " from compare" : "Add " + m.name + " to compare") + '">' + (state.cmp.includes(m.id) ? "Remove from compare" : "Add to compare") + "</button></div>" + cells + "</div>" + (open ? detailHtml(m, s) : "");
+  return '<div class="' + cls + '" data-id="' + m.id + '"><div class="who"><button type="button" id="sel-' + m.id + '" aria-expanded="' + open + '">' + num + m.name + '<span class="chev" aria-hidden="true">' + (open ? "▾" : "▸") + "</span></button>" + chips(m) + (reason ? '<span class="reason">' + reason + "</span>" : "") + '<button type="button" class="vs-add" id="cmp-add-' + m.id + '" data-cmp="' + m.id + '" aria-pressed="' + state.cmp.includes(m.id) + '" aria-label="' + (state.cmp.includes(m.id) ? "Remove " + m.name + " from compare" : "Add " + m.name + " to compare") + '">' + (state.cmp.includes(m.id) ? "− Remove from compare" : "+ Add to compare") + "</button></div>" + cells + "</div>" + (open ? detailHtml(m, s) : "");
 }
 
 function detailHtml(m, s) {
   const stats = COLS.map((p) => {
     const on = p.id === s.rank;
     const head = COL_GROUP[p.id] ? '<p class="stat-group">' + COL_GROUP[p.id] + "</p>" : "";
-    return head + '<div class="stat' + (on ? " on" : "") + '"><span class="name">' + p.name + (p.low ? "<small>Lower is better</small>" : "") + "</span>" + bar(m[p.id], p, s, true) + '<span class="num">' + (valueText(m, p, s) ?? (p.missing || "Not published")) + "</span></div>";
+    return head + '<div class="stat' + (on ? " on" : "") + '"><span class="name" data-tip="' + p.id + '">' + p.name + (p.low ? "<small>Lower is better</small>" : "") + "</span>" + bar(m[p.id], p, s, true) + '<span class="num">' + (valueText(m, p, s) ?? (p.missing || "Not published")) + "</span></div>";
   }).join("");
   const facts = [["Nozzle", m.nozzle], ["Nozzle temp", m.temp], ["Bed", m.bed], ["Drying", m.dry + ", " + m.dryAt], ["After getting wet", m.wet], ["Price band", COST_BAND[m.cost]]]
     .map(([k, v]) => "<div><dt>" + k + "</dt><dd>" + v + "</dd></div>").join("");
-  return '<div class="detail"><p class="pick-why">' + m.why + '</p><p class="uses"><b>Great for</b><span>' + m.uses + '</span></p><div class="pick-body"><div class="stats">' + stats + '</div><dl class="facts">' + facts + "</dl></div>" +
-    '<p class="air' + (m.styrene ? " warn" : "") + '"><b>Air</b><span>' + m.air + "</span></p></div>";
+  return '<div class="detail"><p class="pick-why">' + m.why + '</p><p class="uses"><b>Great for</b><span>' + m.uses + '</span></p><p class="air' + (m.fume >= 4 ? " warn" : "") + '"><b>Fumes</b><span>' + m.air + '</span></p><div class="pick-body"><div class="stats">' + stats + '</div><dl class="facts">' + facts + "</dl></div></div>";
 }
 
 function renderPick(res, s) {
@@ -914,12 +925,12 @@ function renderCompare(res, s) {
     ["Drying", (m) => m.dry + ", " + m.dryAt],
     ["After getting wet", (m) => m.wet],
     ["Styrene-based", (m) => m.styrene ? "Yes" : "No"],
-    ["Air", (m) => m.air]
+    ["Fumes", (m) => m.air]
   ].map(factRow).join("");
   const glance = [
     ["Your conditions", (m) => conditionText(m, res)],
     ["Great for", (m) => m.uses],
-    ["Watch for", (m) => chips(m)]
+    ["Watch for", (m) => chips(m, true) || "Nothing flagged"]
   ].map(factRow).join("");
   function factRow([label, get]) { return '<div class="vs-row fact"><span class="vs-label">' + label + "</span>" + list.map((m) => '<div class="vs-side">' + nameTag(m) + '<span class="vs-val">' + get(m) + "</span></div>").join("") + "</div>"; }
   const grid = $("vs-grid");
@@ -952,6 +963,9 @@ function renderControls(s, res) {
   document.querySelectorAll("#place button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === s.place));
   document.querySelectorAll("#colpick button").forEach((b) => {
     const on = s.cols.includes(b.dataset.v);
+    $("colpick").classList.toggle("open", s.colsOpen);
+    $("col-toggle").textContent = "Columns (" + s.cols.length + ") " + (s.colsOpen ? "▾" : "▸");
+    $("col-toggle").setAttribute("aria-expanded", s.colsOpen);
     b.setAttribute("aria-pressed", on);
     b.setAttribute("aria-disabled", on && s.cols.length === 1);
   });
@@ -995,13 +1009,13 @@ $("colpick").innerHTML = '<span class="colpick-label">Columns</span>' + COLS.map
 function showHeadTip(b) {
   const tip = $("head-tip"), view = $("view-rank");
   const box = view.getBoundingClientRect(), r = b.getBoundingClientRect();
-  tip.textContent = COL_TIPS[b.dataset.rank];
+  tip.textContent = COL_TIPS[b.dataset.rank || b.dataset.tip];
   tip.hidden = false;
   tip.style.top = r.bottom - box.top + 5 + "px";
   tip.style.left = Math.max(0, Math.min(r.left - box.left, box.width - tip.offsetWidth)) + "px";
 }
 $("table").addEventListener("mouseover", (e) => {
-  const b = e.target.closest("[data-rank]");
+  const b = e.target.closest("[data-rank], [data-tip]");
   if (b) showHeadTip(b); else $("head-tip").hidden = true;
 });
 $("table").addEventListener("focusin", (e) => { const b = e.target.closest("[data-rank]"); if (b) showHeadTip(b); });
@@ -1016,6 +1030,7 @@ function showColTip(b) {
 }
 $("colpick").addEventListener("mouseover", (e) => { const b = e.target.closest("button"); if (b) showColTip(b); });
 $("colpick").addEventListener("focusin", (e) => { const b = e.target.closest("button"); if (b) showColTip(b); });
+$("col-toggle").addEventListener("click", () => { state.colsOpen = !state.colsOpen; render(); });
 $("colpick").addEventListener("mouseleave", () => { $("col-tip").hidden = true; });
 $("colpick").addEventListener("focusout", () => { $("col-tip").hidden = true; });
 $("colpick").addEventListener("click", (e) => {
