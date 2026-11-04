@@ -249,6 +249,9 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
 .notes ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; }
 .notes > div { min-width: 0; }
 
+@media (min-width: 1001px) {
+  .panel { max-height: calc(100vh - 32px); overflow-y: auto; }
+}
 @media (max-width: 1000px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
   .panel { position: static; }
@@ -284,12 +287,13 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
   .vs-grid.many .vs-row.head { display: none; }
   .vs-grid.many .vs-name { display: block; }
 }
+html:not(.kbd) :focus { outline: none; }
 </style>
 
 <div class="wrap">
   <header>
     <h1>Bambu Filament Picker</h1>
-    <p class="lede">Set the conditions your part has to survive. Filament that can't cope drops out, and the rest rank by what you need most.</p>
+    <p class="lede">Set what your part has to handle. Filament that doesn't fit drops out, and the rest rank by what you need most. It's a shortlist to test, not a guarantee.</p>
     <p class="hint">Prices are rough estimates for a single roll, without sales or bulk discounts.</p>
   </header>
 
@@ -305,6 +309,7 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
           <button type="button" id="mode-spring" data-v="spring">Spring back</button>
           <button type="button" id="mode-flex" data-v="flex">Rubbery</button>
         </div>
+        <p class="hint" id="mode-hint"></p>
       </fieldset>
 
       <fieldset class="group rigid-only">
@@ -348,9 +353,10 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
 
       <fieldset class="group">
         <legend>My preferences</legend>
+        <label class="check"><input type="checkbox" id="ams"><span>Must run through AMS<small>Rules out filament tagged no AMS</small></span></label>
         <label class="check"><input type="checkbox" id="styrene"><span>Avoid styrene<small>Rules out the ABS and ASA families</small></span></label>
         <label class="check"><input type="checkbox" id="nodry"><span>Skip filament that must be dried<small>Rules out PC, TPU, and the engineering fiber grades</small></span></label>
-        <label class="check"><input type="checkbox" id="noanneal"><span>Won't bake prints in an oven<small>Some fiber filaments only reach their listed heat resistance after baking. This rules them out above 60 °C, which is my estimate.</small></span></label>
+        <label class="check"><input type="checkbox" id="noanneal"><span>Won't bake prints in an oven<small>Some fiber filaments only reach their listed values, especially heat resistance, after baking. This rules them out above 60 °C, which is my estimate. Bambu advises a drying oven, not a kitchen oven.</small></span></label>
       </fieldset>
       </div>
     </form>
@@ -402,22 +408,23 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
         <li>Bars in a column share one scale, starting at zero, so lengths compare directly. Toughness and layer bars widen their scale when TPU is shown, and a note says when.</li>
         <li>Great for lines are examples, not approval of a specific part. Test anything load-bearing or safety-related.</li>
         <li>Passing only means a material matches the rules set here. It doesn't prove a real part will work.</li>
-        <li>PET-CF, PAHT-CF, PA6-CF, and PA6-GF heat values come from annealed test bars. Bambu suggests annealing printed parts at about 80 to 130 °C for 5 to 12 hours, so an unannealed part may soften earlier. Bambu doesn't publish how much earlier.</li>
+        <li>PET-CF, PAHT-CF, PA6-CF, and PA6-GF values come from annealed test bars, so all of their numbers, not just heat, may be lower on an unbaked part. Bambu suggests annealing printed parts at about 80 to 130 °C for 5 to 12 hours, so an unannealed part may soften earlier. Bambu doesn't publish how much earlier.</li>
         <li>Values come from Bambu Lab test bars at 100% infill. Real parts, and other brands, will differ.</li>
+        <li>PLA Basic Gradient values come from a shop listing, not a Bambu sheet, so its water uptake is unknown. PLA Silk Multi-Color uses the last Silk Dual-Color sheet. PLA Palette is left out because I found no data sheet.</li>
         <li>ABS-GF, PA6-GF, PPA-CF, PC FR, ASA Aero, and PETG Matte use their own data sheets, not the guide. PPA-CF bars were printed without baking in a 52 °C chamber. ASA Aero values may change with foaming, and PETG Matte's sheet doesn't say if its impact values are notched.</li>
         <li>PPS-CF is left out because it needs 310 to 340 °C, above the X2D's 300 °C limit. TPU 75A is left out because it's 2.85 mm and the X2D uses 1.75 mm.</li>
         <li>The heat filter is a first screen. It checks HDT at 0.45 MPa plus a 10 °C margin, so it doesn't prove a part can hold a load at that heat for long.</li>
-        <li>Bend range divides bending strength by stiffness. High is 4% or more, Medium is 3% to 4%, and Low is under 3%. It's only a rough group, because bending strength isn't the point where a part stops springing back. Within a group, the list sorts by toughness.</li>
+        <li>Bend range divides bending strength by stiffness. High is 4% or more, Medium is 3% to 4%, and Low is under 3%. It's only a rough group, because bending strength isn't the point where a part stops springing back. Within a group, the list sorts by the calculated value.</li>
         <li>Spring back is my judgment for clips and snap fits, based on general material behavior. Stretch before break alone doesn't show that a part springs back, so test your part, because repeated bending can still fatigue it.</li>
         <li>Stretch before break comes from Bambu's data sheets, and TPU bars are cut off because they pass 650%.</li>
         <li>Ease, sag resistance, accuracy and fit, warp resistance, and surface are my 1 to 5 estimates from general material behavior on an enclosed printer, where 5 is best. They aren't lab data, so print a test for parts that must fit.</li>
         <li>Fume risk is my rough 1 to 5 estimate of print emissions, where 1 is lowest. It leans on limited studies and base polymers, and it isn't a medical or safety rating. Brand, color, and nozzle temperature all change emissions.</li>
         <li>UV resistance is a 1 to 5 estimate from outdoor material guides. In the sun needs 5, and partial shade needs at least 3. With no sun exposure selected, UV rules nothing out. Color, grade, and climate all change the result, and stabilized PC or nylon can last much longer.</li>
         <li>Overhang and bridging are the limits listed on Bambu's data sheets, not a side-by-side test, so small differences may not hold on real prints.</li>
-        <li>Cost bands are rounded euros per kg before shipping, for a single 1 kg roll without sales or bulk discounts. PLA Basic, PLA Matte, PLA Silk+, PLA Tough+, ASA, ABS-GF, PETG-CF, PC, PA6-GF, and TPU 95A HF use Bambu's own list price, which is often lower than shops. The rest come from regular EU shop prices. All were checked in November 2026. Plain TPU 95A uses the 95A HF price as a proxy. PPA-CF comes on a 750 g roll, so its price is scaled to 1 kg. PETG Matte uses PETG Basic's band, because a US source lists them at the same price. TPU for AMS prices varied a lot, so its band is a middle estimate. PLA Silk Dual is also an estimate, because the only price found came from a shop that ran high on other filaments. Prices vary by shop.</li>
+        <li>Cost bands are rounded euros per kg before shipping, for a single 1 kg roll without sales or bulk discounts. PLA Basic, PLA Matte, PLA Silk+, PLA Tough+, PLA Metal, PLA-CF, ASA, ABS-GF, PETG-CF, PC, PA6-GF, TPU 95A HF, and TPU for AMS use Bambu's own list price, which is often lower than shops. The rest come from regular EU shop prices. All were checked in November 2026. Most look-focused PLAs use prices from Bambu's store list, some worked back from its 47% bulk price. PPA-CF comes on a 750 g roll, so its price is scaled to 1 kg. PETG Matte uses PETG Basic's band, because a US source lists them at the same price. Prices vary by shop.</li>
         <li>Bed ranges are for textured PEI on base grades. PLA variants use the range from their own data sheets.</li>
         <li>Color can shift these numbers, especially on specialty colors, so treat each row as typical for that product.</li>
-        <li>After getting wet notes are general guidance, except the nylon warning, which comes from Bambu's drying guide.</li>
+        <li>Wet filament notes are general guidance, except the nylon warning, which comes from Bambu's drying guide.</li>
         <li>Air quality notes are qualitative, because no single study covers all of these materials.</li>
       </ul>
     </div>
@@ -425,6 +432,17 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
       <h3>Sources</h3>
       <ul>
         <li><a href="https://cdn1.bambulab.com/filament/a5e185aed14e6/filament-guide-en-4.pdf">Bambu Filament Guide</a></li>
+        <li><a href="https://store.bblcdn.com/s7/default/729a8bf233e9474db25c8d5be1e64a00/Bambu_PLA_Translucent_Technical_Data_Sheet.pdf">Bambu PLA Translucent data sheet</a></li>
+        <li><a href="https://www.solidprint3d.co.uk/wp-content/uploads/2026/07/Bambu-Lab-PLA-Pure-filament_TDS-compressed.pdf">Bambu PLA Pure data sheet</a></li>
+        <li><a href="https://www.additive-x.com/shop/mpattachments/file/viewonline/id/1045/product_id/2935">Bambu PLA Wood data sheet</a></li>
+        <li><a href="https://cdn.shopify.com/s/files/1/0645/5876/0155/files/Bambu_PLA_Sparkle_Technical_Data_Sheet.pdf">Bambu PLA Sparkle data sheet</a></li>
+        <li><a href="https://cdn.shopify.com/s/files/1/0380/5149/files/Bambu_PLA_Marble_Technical_Data_Sheet.pdf">Bambu PLA Marble data sheet</a></li>
+        <li><a href="https://cdn.shopify.com/s/files/1/0584/7236/6216/files/Bambu_PLA_Galaxy_Technical_Data_Sheet.pdf">Bambu PLA Galaxy data sheet</a></li>
+        <li><a href="https://www.additive-x.com/shop/mpattachments/file/viewonline/id/786/product_id/2537">Bambu PLA Glow data sheet</a></li>
+        <li><a href="https://cdn.shopify.com/s/files/1/0574/3116/2995/files/Bambu_PLA_Aero_Technical_Data_Sheet.pdf">Bambu PLA Aero data sheet</a></li>
+        <li><a href="https://www.additive-x.com/shop/mpattachments/file/viewonline/id/803/product_id/2564">Bambu PLA Silk Dual-Color data sheet</a></li>
+        <li><a href="https://www.additive-x.com/shop/mpattachments/file/viewonline/id/796/product_id/2557">Bambu PETG Translucent data sheet</a></li>
+        <li><a href="https://stemfinity.com/products/bambu-lab-pla-basic-gradient">PLA Basic Gradient specs at STEMfinity</a></li>
         <li><a href="https://chemicalinsights.org/wp-content/uploads/2022/03/3DPrinting_BasicFacts.pdf">3D printing basic facts at Chemical Insights</a></li>
         <li><a href="https://ul.org/news/comprehensive-emissions-data-material-extrusion-3d-printing-now-available">UL emissions data summary</a></li>
         <li><a href="https://inchem.org:443/documents/icsc/icsc/eics0118.htm">Caprolactam safety card</a></li>
@@ -439,10 +457,9 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
         <li><a href="https://bambuhub.pages.dev/printers/x2d">X2D filament notes at BambuHub</a></li>
         <li><a href="https://www.createeducation.com/?p=99354">PPA-CF AMS note at Create Education</a></li>
         <li><a href="https://www.lesimprimantes3d.fr/dl/Bambus_ASA-CF_Technical_Data_Sheet.pdf">Bambu ASA-CF data sheet</a></li>
-        <li><a href="https://www.additive-x.com/shop/mpattachments/file/viewonline/id/580/product_id/2330">Bambu PETG Basic data sheet</a></li>
+        <li><a href="https://store.bblcdn.com/s1/default/cb94589bf7994fdcbfa833badefae9cd/Bambu_PETG_Basic_Technical_Data_Sheet.pdf">Bambu PETG Basic data sheet V3.0</a></li>
         <li><a href="https://www.additive-x.com/shop/mpattachments/file/viewonline/id/513/product_id/2261">Bambu PLA Matte data sheet</a></li>
         <li><a href="https://store.bblcdn.eu/s8/default/d0de0f57694b406dbf3e9b2345b7dbb9/Bambu_PLA_Silk__Technical_Data_Sheet.pdf">Bambu PLA Silk+ data sheet</a></li>
-        <li><a href="https://cdn.shopify.com/s/files/1/0584/7236/6216/files/Bambu_PLA_Silk_Dual_Color_Technical_Data_Sheet.pdf">Bambu PLA Silk Dual Color data sheet</a></li>
         <li><a href="https://cdn.shopify.com/s/files/1/0645/5876/0155/files/Bambu_PLA_Metal_Technical_Data_Sheet.pdf">Bambu PLA Metal data sheet</a></li>
         <li><a href="https://store.bblcdn.com/s1/default/7130c176eac54e928d650e48d8b12d72/new_Bambu_PLA_Tough_Technical_Data_Sheet.pdf">Bambu PLA Tough+ data sheet</a></li>
         <li><a href="https://eu.store.bambulab.com/fr/products/pa6-cf">Bambu PA6-CF wet and dry stiffness</a></li>
@@ -470,14 +487,11 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
         <li><a href="https://makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-petg-cf-black-1-75mm-1kg-with-spool-210000005776">PETG-CF price at Makerpoint</a></li>
         <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-tpu-hf-red-1-75mm-1kg-with-spool-210000005761">TPU 95A HF price at Makerpoint</a></li>
         <li><a href="https://elektronicavoorjou.nl/en/product/bambu-lab-tpu-95a-hf-gray-with-coil-1kg/">TPU 95A HF price at Elektronica voor jou</a></li>
-        <li><a href="https://filament2print.com/de/flexibel-tpe-tpu/3682-ams-tpu-bambulab.html">TPU for AMS price at Filament2Print</a></li>
-        <li><a href="https://aio.lv/en/product--bambulab-bml-26185--11972977.md">TPU for AMS price at AIO.lv</a></li>
         <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-abs-black-1-75mm-1kg-with-spool-210000005737">ABS price at Makerpoint</a></li>
         <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-asa-black-1-75mm-1kg-with-spool-210000005746">ASA price at Makerpoint</a></li>
         <li><a href="https://www.3d-drucker-experte.de/en/consumables/manufacturers/bambu-lab/bambu-lab-absasa/bambu-lab-asa-cf/4248/bambu-lab-asa-cf-filament-black-1kg-1.75-mm-with-spool">ASA-CF price at 3D-Drucker-Experte</a></li>
         <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-pc-black-1-75mm-1kg-with-spool-210000005755">PC price at Makerpoint</a></li>
         <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-pla-cf-black-1-75mm-1kg-with-spool-210000005769">PLA-CF price at Makerpoint</a></li>
-        <li><a href="https://aio.lv/en/product--bambulab-bml-24623--11983096.md">PLA Silk Dual price at AIO.lv</a></li>
         <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-tpu-90a-black-1kg-with-spool-210000007712">TPU 90A price at Makerpoint</a></li>
         <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-tpu-85a-black-1-75mm-1kg-with-spool-210000008072">TPU 85A price at Makerpoint</a></li>
         <li><a href="https://www.makerpoint.nl/en-gb/3d-printing/consumables/filament/bambu-lab-abs-gf-black-1kg-with-spool-210000006737">ABS-GF price at Makerpoint</a></li>
@@ -506,17 +520,27 @@ const MATERIALS = [
   { id: "pla-cf", name: "PLA-CF", kind: "Carbon-fiber PLA", stiff: 3950, str: 89, tough: 23.2, layer: 7.8, hdt: 55, water: 0.42, dry: "Optional", dryAt: "55 °C, 8 h", nozzle: "Hardened steel, 0.4 mm or larger", temp: "210 to 240 °C", bed: "55 to 65 °C", speed: "Under 250 mm/s", why: "The easiest big jump in stiffness. It stays a mild-temperature material and is one of the least tough options here.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
   { id: "pla-matte", name: "PLA Matte", kind: "PLA with a matte finish", stiff: 2360, str: 53, tough: 19.2, layer: 6.6, hdt: 58, water: 0.4, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "190 to 230 °C", bed: "35 to 45 °C", speed: "Under 300 mm/s", why: "Chosen for its flat, low-gloss look. It gives up a lot of strength and layer adhesion compared with PLA Basic, so keep it for looks or light loads. Its high stretch doesn't make it tough.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
   { id: "pla-silk", name: "PLA Silk+", kind: "PLA with a glossy finish", stiff: 2460, str: 75, tough: 18.5, layer: 8.5, hdt: 60, water: 0.4, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "210 to 240 °C", bed: "35 to 45 °C", speed: "Under 250 mm/s", why: "A glossy finish with almost the same strength as PLA Basic. It's less tough, and its layer adhesion is lower.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
-  { id: "pla-silk-dual", name: "PLA Silk Dual", kind: "Two-tone glossy PLA", stiff: 2370, str: 66, tough: 24.5, layer: 4.6, hdt: 53, water: 0.52, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "210 to 240 °C", bed: "35 to 45 °C", speed: "Under 250 mm/s", why: "A decorative two-tone finish. Its layer adhesion is about a third of PLA Basic's, so avoid load across the layers.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
   { id: "pla-metal", name: "PLA Metal", kind: "PLA with a metallic finish", stiff: 2290, str: 66, tough: 58.9, layer: 16.8, hdt: 62, water: 0.4, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "190 to 230 °C", bed: "35 to 45 °C", speed: "Under 300 mm/s", why: "A metallic look with more than double PLA Basic's toughness. It gives up some stiffness and strength in exchange.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
   { id: "pla-tough", name: "PLA Tough+", springy: true, kind: "Toughened PLA", stiff: 2140, str: 65, tough: 80.6, layer: 25.9, hdt: 61, water: 0.27, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "220 to 250 °C", bed: "35 to 65 °C", speed: "Under 300 mm/s", why: "The toughest rigid material here, with the best impact score across layers too. It's about 22% less stiff than PLA Basic. Silver scores lower across layers, at 18.6 kJ/m².", air: "Not compared in the studies used here. Bambu advises good ventilation because of odors." },
-  { id: "petg", name: "PETG Basic", springy: true, kind: "Plain PETG", stiff: 1790, str: 81, tough: 52.7, layer: 13.6, hdt: 69, water: 0.32, dry: "Recommended", dryAt: "65 °C, 8 h", nozzle: "0.4, 0.6, or 0.8 mm nozzle", temp: "240 to 270 °C", bed: "65 to 75 °C", speed: "Under 200 mm/s", why: "The tough everyday default for indoor parts. It flexes before it breaks, so it's a weak choice when stiffness matters.", air: "UL found lower exposure than ABS, but still listed it among high total-VOC emitters, so keep the room aired." },
-  { id: "petg-matte", name: "PETG Matte", kind: "PETG with a matte finish", stiff: 1995, str: 65, tough: 32.6, layer: 10, hdt: 72, water: 0.29, dry: "Recommended", dryAt: "65 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "230 to 260 °C", bed: "65 to 75 °C", speed: "Under 250 mm/s", why: "A flat, low-gloss look that hides layer lines, with more strength and heat resistance than PLA Matte. It's stiffer than PETG Basic, but less tough.", air: "Not compared in the studies used here, so treat it like PETG at minimum." },
+  { id: "pla-pure", name: "PLA Pure", kind: "PLA with EU food-contact ingredients", stiff: 2880, str: 75, tough: 20.6, layer: 10, hdt: 60, water: 0.45, dry: "If damp", dryAt: "50 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "190 to 230 °C", bed: "35 to 65 °C", speed: "Under 200 mm/s", why: "Stiffer than PLA Basic, with similar strength. Bambu says every ingredient is certified for EU food contact, but that doesn't make a printed part food safe. It's less tough, with lower layer adhesion.", air: "Bambu claims lower emissions, but it wasn't compared in the studies used here." },
+  { id: "pla-translucent", name: "PLA Translucent", kind: "PLA that lets light through", stiff: 3000, str: 85, tough: 18.5, layer: 8.5, hdt: 60, water: 0.34, dry: "If damp", dryAt: "50 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "200 to 240 °C", bed: "35 to 65 °C", speed: "Under 150 mm/s", why: "Lets light through, and it's stiffer and stronger than PLA Basic. It gives up about 30% of the toughness, and it prints slowly.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
+  { id: "pla-gradient", name: "PLA Basic Gradient", kind: "PLA with color that shifts along the roll", stiff: 2270, str: 73, tough: 61.2, layer: 23.8, hdt: 57, water: null, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "190 to 230 °C", bed: "35 to 45 °C", speed: "Under 300 mm/s", why: "Color that shifts as it prints. The listed toughness and layer adhesion are far above PLA Basic, but those numbers come from a shop listing, so treat them with care.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
+  { id: "pla-silk-multi", name: "PLA Silk Multi-Color", kind: "Multi-color glossy PLA", stiff: 2370, str: 66, tough: 24.5, layer: 4.6, hdt: 53, water: 0.52, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "210 to 240 °C", bed: "35 to 45 °C", speed: "Under 250 mm/s", why: "A glossy multi-color finish. Its layer adhesion is about a third of PLA Basic's, so avoid load across the layers.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
+  { id: "pla-wood", name: "PLA Wood", kind: "PLA with wood powder", stiff: 2780, str: 55, tough: 15.7, layer: 5.6, hdt: 60, water: 1.25, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "0.4 mm or larger", temp: "190 to 240 °C", bed: "35 to 45 °C", speed: "Under 250 mm/s", why: "A wood-like look and feel. It gives up about 28% of PLA Basic's strength and over 40% of its toughness, and it has weak layer adhesion. It also absorbs more water than the other PLAs.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
+  { id: "pla-sparkle", name: "PLA Sparkle", kind: "PLA with a glitter finish", stiff: 2310, str: 63, tough: 66.5, layer: 10.3, hdt: 55, water: 0.44, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "0.4 mm or larger", temp: "190 to 230 °C", bed: "35 to 45 °C", speed: "Under 250 mm/s", why: "A glittery finish that's 2.5× as tough as PLA Basic. It gives up some stiffness and strength, and its layer adhesion is lower.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
+  { id: "pla-marble", name: "PLA Marble", kind: "PLA with a stone-like finish", stiff: 2490, str: 85, tough: 24, layer: 6.5, hdt: 56, water: 0.44, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "0.4 mm or larger", temp: "190 to 230 °C", bed: "35 to 45 °C", speed: "Under 250 mm/s", why: "A stone-like look, and one of the strongest PLAs here without fiber. Toughness is close to PLA Basic, but layer adhesion is about half.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
+  { id: "pla-galaxy", name: "PLA Galaxy", kind: "PLA with glass microspheres", stiff: 2200, str: 58, tough: 55.4, layer: 5.8, hdt: 55, water: 0.45, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "190 to 230 °C", bed: "35 to 45 °C", speed: "Under 250 mm/s", why: "A sparkly finish that's about twice as tough as PLA Basic. It's weaker, and layer adhesion is less than half.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
+  { id: "pla-glow", name: "PLA Glow", kind: "Glow-in-the-dark PLA", stiff: 2640, str: 76, tough: 27.3, layer: 19.8, hdt: 55, water: 0.46, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "Hardened steel, 0.4 mm or larger", temp: "190 to 230 °C", bed: "35 to 45 °C", speed: "Under 250 mm/s", why: "Glows in the dark, with almost no compromise. It matches PLA Basic on strength and toughness, with better layer adhesion. It's abrasive, so use a hardened nozzle.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
+  { id: "pla-aero", name: "PLA Aero", kind: "Lightweight foaming PLA", stiff: 1690, str: 45, tough: 28.8, layer: 3.1, hdt: 53, water: 0.45, dry: "If damp", dryAt: "55 °C, 8 h", nozzle: "0.4 mm or larger", temp: "210 to 260 °C", bed: "35 to 45 °C", speed: "Under 180 mm/s", why: "It foams as it prints, for very light parts. It has the lowest strength and layer adhesion here, so choose it only when weight matters most.", air: "Not compared in the studies used here, so treat it like PLA at minimum." },
+  { id: "petg", name: "PETG Basic", springy: true, kind: "Plain PETG", stiff: 1950, str: 75, tough: 34.2, layer: 10.5, hdt: 71, water: 0.45, dry: "Recommended", dryAt: "65 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "230 to 260 °C", bed: "65 to 75 °C", speed: "Under 200 mm/s", why: "The everyday default for indoor parts, with more heat resistance than PLA. This relaunched version is stiffer and less tough than the old PETG Basic.", air: "UL found lower exposure than ABS, but still listed it among high total-VOC emitters, so keep the room aired." },
+  { id: "petg-matte", name: "PETG Matte", kind: "PETG with a matte finish", stiff: 1995, str: 65, tough: 32.6, layer: 10, hdt: 72, water: 0.29, dry: "Recommended", dryAt: "65 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "230 to 260 °C", bed: "65 to 75 °C", speed: "Under 250 mm/s", why: "A flat, low-gloss look that hides layer lines, with more strength and heat resistance than PLA Matte. Its strength and toughness are close to PETG Basic.", air: "Not compared in the studies used here, so treat it like PETG at minimum." },
+  { id: "petg-translucent", name: "PETG Translucent", kind: "PETG that lets light through", stiff: 1610, str: 68, tough: 37.4, layer: 7.2, hdt: 74, water: 0.3, dry: "Recommended", dryAt: "65 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "230 to 270 °C", bed: "65 to 75 °C", speed: "Under 220 mm/s", why: "Lets light through, with a bit more heat resistance than PETG Basic. It's less stiff, and its layer adhesion is lower.", air: "Not compared in the studies used here, so treat it like PETG at minimum." },
   { id: "petg-cf", name: "PETG-CF", kind: "Carbon-fiber PETG", stiff: 2910, str: 70, tough: 41.2, layer: 10.7, hdt: 74, water: 0.3, dry: "Recommended", dryAt: "65 °C, 8 h", nozzle: "Hardened steel, 0.4 mm or larger", temp: "240 to 270 °C", bed: "60 to 80 °C", speed: "Under 200 mm/s", why: "Stiffer than PETG and tougher than PLA-CF, with little fuss. It's a good all-round pick for indoor brackets.", air: "Not compared in the studies used here, so treat it like PETG at minimum." },
   { id: "abs", name: "ABS", springy: true, kind: "Plain ABS", stiff: 1880, str: 62, tough: 39.3, layer: 7.4, hdt: 87, water: 0.65, dry: "Optional", dryAt: "80 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "240 to 280 °C", bed: "90 to 100 °C", speed: "Under 300 mm/s", styrene: true, why: "Tough and heat tolerant, with better layer adhesion than ASA. ASA is about even on stiffness, strength, and toughness, and handles more heat. Choose ABS for layer adhesion, price, color, or acetone smoothing.", air: "Styrene is the main VOC, and UL put ABS in the highest exposure group. Vent outdoors if you can." },
   { id: "abs-gf", name: "ABS-GF", kind: "Glass-fiber ABS", stiff: 2860, str: 68, tough: 14.5, layer: 5.3, hdt: 99, water: 0.53, dry: "Recommended", dryAt: "80 °C, 8 h", nozzle: "Hardened steel, 0.6 mm recommended", temp: "240 to 280 °C", bed: "80 to 100 °C", speed: "Under 180 mm/s", styrene: true, why: "About 50% stiffer than ABS, with more heat resistance and less warping. Impact toughness drops to well under half, so use it for rigid parts, not parts that get hit.", air: "It has an ABS base, so treat it like ABS and vent outdoors if you can." },
   { id: "asa", name: "ASA", springy: true, kind: "Plain ASA", stiff: 1920, str: 65, tough: 41, layer: 4.9, hdt: 100, water: 0.45, dry: "Optional", dryAt: "80 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "240 to 280 °C", bed: "90 to 100 °C", speed: "Under 300 mm/s", styrene: true, uv: true, why: "The outdoor default, with good UV resistance. Its layer adhesion is among the weakest here, so orient loads along the layers.", air: "One study measured under a quarter of ABS's styrene, but UL listed ASA among high total-VOC emitters. Vent outdoors if you can." },
   { id: "asa-cf", name: "ASA-CF", kind: "Carbon-fiber ASA", stiff: 3740, str: 72, tough: 14, layer: 9.4, hdt: 110, water: 0.33, dry: "Recommended", dryAt: "80 °C, 8 h", nozzle: "Hardened steel, 0.4 mm or larger", temp: "250 to 280 °C", bed: "80 to 100 °C", speed: "Under 250 mm/s", styrene: true, uv: true, why: "Nearly twice as stiff as ASA, with better layer adhesion and more heat resistance. The cost is much lower impact toughness.", air: "It has an ASA base, so treat it like ASA and vent outdoors if you can." },
-  { id: "asa-aero", name: "ASA Aero", kind: "Lightweight foaming ASA", stiff: 1510, str: 58, tough: 32, layer: 3.4, hdt: 85, water: 0.8, dry: "Recommended", dryAt: "80 °C, 8 h", nozzle: "0.4 mm recommended", temp: "240 to 280 °C", bed: "80 to 90 °C", speed: "Under 150 mm/s", styrene: true, uv: true, why: "It foams as it prints, so parts weigh about 50% to 75% of normal ASA. Choose it when low weight matters, like RC planes. Its layer adhesion is the weakest here.", air: "It has an ASA base, so treat it like ASA and vent outdoors if you can." },
+  { id: "asa-aero", name: "ASA Aero", kind: "Lightweight foaming ASA", stiff: 1510, str: 58, tough: 32, layer: 3.4, hdt: 85, water: 0.8, dry: "Recommended", dryAt: "80 °C, 8 h", nozzle: "0.4 mm recommended", temp: "240 to 280 °C", bed: "80 to 90 °C", speed: "Under 150 mm/s", styrene: true, uv: true, why: "It foams as it prints, so parts weigh about 50% to 75% of normal ASA. Choose it when low weight matters, like RC planes. Its layer adhesion is among the weakest here.", air: "It has an ASA base, so treat it like ASA and vent outdoors if you can." },
   { id: "pc", name: "PC", springy: true, kind: "Polycarbonate", stiff: 2310, str: 108, tough: 34.8, layer: 9, hdt: 117, water: 0.25, dry: "Required", dryAt: "80 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "260 to 290 °C", bed: "100 to 120 °C", speed: "Under 300 mm/s", why: "Strong and heat resistant without carbon fiber. Dry it first and let the heated chamber do its job.", air: "Not compared in the studies used here. Ventilate the room while printing." },
   { id: "pc-fr", name: "PC FR", kind: "Flame-retardant polycarbonate", stiff: 1890, str: 90, tough: 55, layer: 8, hdt: 113, water: 0.12, dry: "Required", dryAt: "80 °C, 8 h", nozzle: "Any 0.2 to 0.8 mm nozzle", temp: "260 to 280 °C", bed: "90 to 110 °C", speed: "Under 300 mm/s", why: "Rated UL 94 V-0 for flame resistance. That rates the material, and it doesn't prove a finished part is fire safe. It's tougher than PC, but less stiff and strong.", air: "Not compared in the studies used here. Ventilate the room while printing." },
   { id: "pet-cf", name: "PET-CF", anneal: true, noAms: true, kind: "Carbon-fiber PET", stiff: 5320, str: 131, tough: 36, layer: 4.5, hdt: 205, water: 0.37, dry: "Required", dryAt: "80 °C, 8 to 12 h", nozzle: "Hardened steel, 0.6 mm recommended", temp: "260 to 300 °C", bed: "70 to 100 °C", speed: "Under 100 mm/s", why: "Very heat resistant, and it absorbs little water. Layer adhesion is among the weakest here, so keep the main load along the layers.", air: "Not compared in the studies used here. Ventilate the room while printing." },
@@ -529,42 +553,51 @@ const MATERIALS = [
 const TPU = { id: "tpu", name: "TPU 95A", noAms: true, kind: "Flexible, Shore 95A", stiff: null, str: null, tough: 125.2, layer: 88.7, hdt: null, water: 1.16, dry: "Required", dryAt: "70 °C, 8 h", nozzle: "0.4 mm or larger", temp: "220 to 240 °C", bed: "30 to 45 °C", speed: "Under 80 mm/s", why: "The flexible choice, with by far the best impact and layer numbers here. Use the X2D's main direct-drive extruder, especially for softer grades. Bambu publishes no heat deflection value, so test it near heat.", air: "Not compared in the studies used here. Ventilate the room while printing." };
 
 const TPUS = [
-  TPU,
-  { ...TPU, id: "tpu-hf", name: "TPU 95A HF", kind: "Faster flexible, Shore 95A", tough: 123.2, layer: 86.3, water: 1.08, bed: "30 to 35 °C", speed: "Under 200 mm/s", noAms: true, why: "Feels like TPU 95A, but prints several times faster. It's the easiest everyday TPU when you don't need multi-material printing. Bambu publishes no heat deflection value, so test it near heat.", air: "Not compared in the studies used here. Ventilate the room while printing." },
+  { ...TPU, id: "tpu-hf", name: "TPU 95A HF", kind: "Faster flexible, Shore 95A", tough: 123.2, layer: 86.3, water: 1.08, bed: "30 to 35 °C", speed: "Under 200 mm/s", noAms: true, why: "A Shore 95A TPU that prints fast. It's the easiest everyday TPU when you don't need multi-material printing. Bambu publishes no heat deflection value, so test it near heat.", air: "Not compared in the studies used here. Ventilate the room while printing." },
   { ...TPU, id: "tpu-ams", name: "TPU for AMS", noAms: false, springy: true, kind: "Firm flexible, Shore 68D", tough: 124.3, layer: 9.6, water: 1.2, bed: "30 to 35 °C", speed: "Under 250 mm/s", why: "Much firmer than the A grades, at Shore 68D, so it feeds through an AMS more easily. Its layer adhesion is far lower, so don't expect the same flexible strength.", air: "Not compared in the studies used here. Ventilate the room while printing." },
   { ...TPU, id: "tpu-90a", name: "TPU 90A", kind: "Soft flexible, Shore 90A", tough: 124.2, layer: 87.3, water: 0.61, temp: "200 to 250 °C", bed: "30 to 35 °C", speed: "Under 200 mm/s", noAms: true, why: "Softer and more comfortable than 95A, but harder to feed. Keep overhangs gentle, and print it through the main direct-drive extruder.", air: "Not compared in the studies used here. Ventilate the room while printing." },
   { ...TPU, id: "tpu-85a", name: "TPU 85A", kind: "Very soft flexible, Shore 85A", tough: 124.3, layer: 88.5, water: 0.67, temp: "200 to 250 °C", bed: "30 to 35 °C", speed: "Under 200 mm/s", nozzle: "0.6 mm or larger", noAms: true, why: "The softest here, for parts that should feel rubbery. It's the hardest to print, and Bambu warns against using Unload, so follow its unloading steps.", air: "Not compared in the studies used here. Ventilate the room while printing." }
 ];
 
-const COST = { "tpu-hf": 2, "tpu-ams": 3, "tpu-90a": 3, "tpu-85a": 3, pla: 1, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 2, "pla-metal": 2, "pla-tough": 1, petg: 1, abs: 1, asa: 1, "pla-cf": 2, "petg-cf": 2, "asa-cf": 3, pc: 3, tpu: 2, "pa6-cf": 4, "pet-cf": 4, "paht-cf": 4, "abs-gf": 2, "pa6-gf": 4, "ppa-cf": 4, "pc-fr": 4, "asa-aero": 4, "petg-matte": 1 };
+const COST = { "tpu-hf": 2, "tpu-ams": 3, "tpu-90a": 3, "tpu-85a": 3, pla: 1, "pla-matte": 1, "pla-silk": 1, "pla-metal": 2, "pla-tough": 1, petg: 1, abs: 1, asa: 1, "pla-cf": 2, "petg-cf": 2, "asa-cf": 3, pc: 3, "pa6-cf": 4, "pet-cf": 4, "paht-cf": 4, "abs-gf": 2, "pa6-gf": 4, "ppa-cf": 4, "pc-fr": 4, "asa-aero": 4, "petg-matte": 1, "pla-pure": 1, "pla-translucent": 1, "pla-gradient": 2, "pla-silk-multi": 2, "pla-wood": 2, "pla-sparkle": 2, "pla-marble": 2, "pla-galaxy": 2, "pla-glow": 2, "pla-aero": 3, "petg-translucent": 1 };
 const COST_BAND = { 1: "<€25/kg", 2: "€25–35/kg", 3: "€35–50/kg", 4: ">€50/kg" };
 MATERIALS.concat(TPUS).forEach((m) => { m.cost = COST[m.id]; });
-const OVERHANG = { "tpu-hf": 55, "tpu-ams": 70, "tpu-90a": 40, "tpu-85a": 40, pla: 55, "pla-cf": 55, "pla-matte": 55, "pla-silk": 55, "pla-silk-dual": 55, "pla-metal": 55, "pla-tough": 55, petg: 70, "petg-cf": 70, abs: 70, asa: 70, "asa-cf": 70, pc: 70, "pet-cf": 70, "paht-cf": 70, "pa6-cf": 70, tpu: 70, "abs-gf": 70, "pa6-gf": 70, "ppa-cf": 70, "pc-fr": 70, "asa-aero": 70, "petg-matte": 70 };
-const BRIDGE = { "tpu-hf": 20, "tpu-ams": 20, "tpu-90a": 10, "tpu-85a": 10, pla: 30, "pla-cf": 30, "pla-matte": 30, "pla-silk": 30, "pla-silk-dual": 30, "pla-metal": 30, "pla-tough": 30, petg: 30, "petg-cf": 30, abs: 40, asa: 40, "asa-cf": 40, pc: 40, "pet-cf": 30, "paht-cf": 40, "pa6-cf": 40, tpu: 20, "abs-gf": 40, "pa6-gf": 40, "ppa-cf": 40, "pc-fr": 40, "asa-aero": 40, "petg-matte": 30 };
-const EASE = { "tpu-hf": 2, "tpu-ams": 3, "tpu-90a": 1, "tpu-85a": 1, pla: 5, "pla-matte": 5, "pla-metal": 5, "pla-silk": 4, "pla-silk-dual": 4, "pla-tough": 4, "pla-cf": 4, petg: 4, "petg-cf": 4, abs: 3, asa: 3, "asa-cf": 3, pc: 2, tpu: 2, "pet-cf": 2, "paht-cf": 2, "pa6-cf": 1, "abs-gf": 3, "pa6-gf": 2, "ppa-cf": 1, "pc-fr": 2, "asa-aero": 2, "petg-matte": 4 };
+const OVERHANG = { "tpu-hf": 55, "tpu-ams": 70, "tpu-90a": 40, "tpu-85a": 40, pla: 55, "pla-cf": 55, "pla-matte": 55, "pla-silk": 55, "pla-metal": 55, "pla-tough": 55, petg: 70, "petg-cf": 70, abs: 70, asa: 70, "asa-cf": 70, pc: 70, "pet-cf": 70, "paht-cf": 70, "pa6-cf": 70, "abs-gf": 70, "pa6-gf": 70, "ppa-cf": 70, "pc-fr": 70, "asa-aero": 70, "petg-matte": 70, "pla-pure": 55, "pla-translucent": 55, "pla-gradient": 55, "pla-silk-multi": 55, "pla-wood": 55, "pla-sparkle": 55, "pla-marble": 55, "pla-galaxy": 55, "pla-glow": 55, "pla-aero": 55, "petg-translucent": 70 };
+const BRIDGE = { "tpu-hf": 20, "tpu-ams": 20, "tpu-90a": 10, "tpu-85a": 10, pla: 30, "pla-cf": 30, "pla-matte": 30, "pla-silk": 30, "pla-metal": 30, "pla-tough": 30, petg: 30, "petg-cf": 30, abs: 40, asa: 40, "asa-cf": 40, pc: 40, "pet-cf": 30, "paht-cf": 40, "pa6-cf": 40, "abs-gf": 40, "pa6-gf": 40, "ppa-cf": 40, "pc-fr": 40, "asa-aero": 40, "petg-matte": 30, "pla-pure": 30, "pla-translucent": 30, "pla-gradient": 30, "pla-silk-multi": 30, "pla-wood": 30, "pla-sparkle": 30, "pla-marble": 30, "pla-galaxy": 30, "pla-glow": 30, "pla-aero": 30, "petg-translucent": 30 };
+const EASE = { "tpu-hf": 2, "tpu-ams": 3, "tpu-90a": 1, "tpu-85a": 1, pla: 5, "pla-matte": 5, "pla-metal": 5, "pla-silk": 4, "pla-tough": 4, "pla-cf": 4, petg: 4, "petg-cf": 4, abs: 3, asa: 3, "asa-cf": 3, pc: 2, "pet-cf": 2, "paht-cf": 2, "pa6-cf": 1, "abs-gf": 3, "pa6-gf": 2, "ppa-cf": 1, "pc-fr": 2, "asa-aero": 2, "petg-matte": 4, "pla-pure": 5, "pla-translucent": 4, "pla-gradient": 5, "pla-silk-multi": 4, "pla-wood": 4, "pla-sparkle": 4, "pla-marble": 4, "pla-galaxy": 4, "pla-glow": 4, "pla-aero": 3, "petg-translucent": 4 };
 MATERIALS.concat(TPUS).forEach((m) => {
   m.overhang = OVERHANG[m.id]; m.bridge = BRIDGE[m.id]; m.ease = EASE[m.id];
   m.speedMax = Number(m.speed.match(/\d+/)[0]);
 });
-const ACCURACY = { "tpu-hf": 1, "tpu-ams": 2, "tpu-90a": 1, "tpu-85a": 1, pla: 5, "pla-cf": 5, "pla-matte": 5, "pla-silk": 4, "pla-silk-dual": 4, "pla-metal": 4, "pla-tough": 4, petg: 4, "petg-cf": 4, abs: 3, asa: 3, "asa-cf": 4, pc: 3, "pet-cf": 4, "paht-cf": 4, "pa6-cf": 3, tpu: 1, "abs-gf": 4, "pa6-gf": 3, "ppa-cf": 4, "pc-fr": 3, "asa-aero": 2, "petg-matte": 4 };
-const WARP = { "tpu-hf": 4, "tpu-ams": 4, "tpu-90a": 4, "tpu-85a": 4, pla: 5, "pla-cf": 5, "pla-matte": 5, "pla-silk": 5, "pla-silk-dual": 5, "pla-metal": 5, "pla-tough": 5, petg: 4, "petg-cf": 5, abs: 2, asa: 3, "asa-cf": 4, pc: 2, "pet-cf": 4, "paht-cf": 3, "pa6-cf": 2, tpu: 4, "abs-gf": 3, "pa6-gf": 2, "ppa-cf": 3, "pc-fr": 2, "asa-aero": 2, "petg-matte": 4 };
-const SURFACE = { "tpu-hf": 2, "tpu-ams": 3, "tpu-90a": 2, "tpu-85a": 2, pla: 4, "pla-cf": 4, "pla-matte": 5, "pla-silk": 5, "pla-silk-dual": 5, "pla-metal": 5, "pla-tough": 4, petg: 3, "petg-cf": 4, abs: 4, asa: 4, "asa-cf": 4, pc: 3, "pet-cf": 4, "paht-cf": 4, "pa6-cf": 4, tpu: 2, "abs-gf": 3, "pa6-gf": 3, "ppa-cf": 4, "pc-fr": 3, "asa-aero": 2, "petg-matte": 5 };
-const UV_SCORE = { "tpu-hf": null, "tpu-ams": null, "tpu-90a": null, "tpu-85a": null, pla: 1, "pla-cf": 1, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 1, "pla-metal": 1, "pla-tough": 1, petg: 3, "petg-cf": 3, abs: 2, asa: 5, "asa-cf": 5, pc: 3, "pet-cf": 3, "paht-cf": 2, "pa6-cf": 2, tpu: null, "abs-gf": 2, "pa6-gf": 2, "ppa-cf": 2, "pc-fr": 3, "asa-aero": 5, "petg-matte": 3 };
-const FUME = { "tpu-hf": 2, "tpu-ams": 2, "tpu-90a": 2, "tpu-85a": 2, pla: 1, "pla-cf": 1, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 1, "pla-metal": 1, "pla-tough": 2, petg: 2, "petg-cf": 2, tpu: 2, pc: 3, "pet-cf": 3, "paht-cf": 3, "pa6-cf": 4, asa: 4, "asa-cf": 4, abs: 5, "abs-gf": 5, "pa6-gf": 4, "ppa-cf": 3, "pc-fr": 3, "asa-aero": 4, "petg-matte": 2 };
+const ACCURACY = { "tpu-hf": 1, "tpu-ams": 2, "tpu-90a": 1, "tpu-85a": 1, pla: 5, "pla-cf": 5, "pla-matte": 5, "pla-silk": 4, "pla-metal": 4, "pla-tough": 4, petg: 4, "petg-cf": 4, abs: 3, asa: 3, "asa-cf": 4, pc: 3, "pet-cf": 4, "paht-cf": 4, "pa6-cf": 3, "abs-gf": 4, "pa6-gf": 3, "ppa-cf": 4, "pc-fr": 3, "asa-aero": 2, "petg-matte": 4, "pla-pure": 5, "pla-translucent": 4, "pla-gradient": 5, "pla-silk-multi": 4, "pla-wood": 4, "pla-sparkle": 4, "pla-marble": 4, "pla-galaxy": 4, "pla-glow": 4, "pla-aero": 2, "petg-translucent": 4 };
+const WARP = { "tpu-hf": 4, "tpu-ams": 4, "tpu-90a": 4, "tpu-85a": 4, pla: 5, "pla-cf": 5, "pla-matte": 5, "pla-silk": 5, "pla-metal": 5, "pla-tough": 5, petg: 4, "petg-cf": 5, abs: 2, asa: 3, "asa-cf": 4, pc: 2, "pet-cf": 4, "paht-cf": 3, "pa6-cf": 2, "abs-gf": 3, "pa6-gf": 2, "ppa-cf": 3, "pc-fr": 2, "asa-aero": 2, "petg-matte": 4, "pla-pure": 5, "pla-translucent": 5, "pla-gradient": 5, "pla-silk-multi": 5, "pla-wood": 5, "pla-sparkle": 5, "pla-marble": 5, "pla-galaxy": 5, "pla-glow": 5, "pla-aero": 4, "petg-translucent": 4 };
+const SURFACE = { "tpu-hf": 2, "tpu-ams": 3, "tpu-90a": 2, "tpu-85a": 2, pla: 4, "pla-cf": 4, "pla-matte": 5, "pla-silk": 5, "pla-metal": 5, "pla-tough": 4, petg: 3, "petg-cf": 4, abs: 4, asa: 4, "asa-cf": 4, pc: 3, "pet-cf": 4, "paht-cf": 4, "pa6-cf": 4, "abs-gf": 3, "pa6-gf": 3, "ppa-cf": 4, "pc-fr": 3, "asa-aero": 2, "petg-matte": 5, "pla-pure": 4, "pla-translucent": 4, "pla-gradient": 5, "pla-silk-multi": 5, "pla-wood": 4, "pla-sparkle": 5, "pla-marble": 5, "pla-galaxy": 5, "pla-glow": 4, "pla-aero": 2, "petg-translucent": 3 };
+const UV_SCORE = { "tpu-hf": null, "tpu-ams": null, "tpu-90a": null, "tpu-85a": null, pla: 1, "pla-cf": 1, "pla-matte": 1, "pla-silk": 1, "pla-metal": 1, "pla-tough": 1, petg: 3, "petg-cf": 3, abs: 2, asa: 5, "asa-cf": 5, pc: 3, "pet-cf": 3, "paht-cf": 2, "pa6-cf": 2, "abs-gf": 2, "pa6-gf": 2, "ppa-cf": 2, "pc-fr": 3, "asa-aero": 5, "petg-matte": 3, "pla-pure": 1, "pla-translucent": 1, "pla-gradient": 1, "pla-silk-multi": 1, "pla-wood": 1, "pla-sparkle": 1, "pla-marble": 1, "pla-galaxy": 1, "pla-glow": 1, "pla-aero": 1, "petg-translucent": 3 };
+const FUME = { "tpu-hf": 2, "tpu-ams": 2, "tpu-90a": 2, "tpu-85a": 2, pla: 1, "pla-cf": 1, "pla-matte": 1, "pla-silk": 1, "pla-metal": 1, "pla-tough": 2, petg: 2, "petg-cf": 2, pc: 3, "pet-cf": 3, "paht-cf": 3, "pa6-cf": 4, asa: 4, "asa-cf": 4, abs: 5, "abs-gf": 5, "pa6-gf": 4, "ppa-cf": 3, "pc-fr": 3, "asa-aero": 4, "petg-matte": 2, "pla-pure": 1, "pla-translucent": 1, "pla-gradient": 1, "pla-silk-multi": 1, "pla-wood": 1, "pla-sparkle": 1, "pla-marble": 1, "pla-galaxy": 1, "pla-glow": 1, "pla-aero": 1, "petg-translucent": 2 };
 MATERIALS.concat(TPUS).forEach((m) => { m.fume = FUME[m.id]; });
 const USES = {
   pla: "Test prints, trial fits, desk organizers, display models",
   "pla-cf": "Stiff indoor holders, camera mounts, drilling guides",
   "pla-matte": "Scale models, name signs, product samples, decorative covers",
   "pla-silk": "Vases, gifts, shiny decorative models",
-  "pla-silk-dual": "Vases, ornaments, two-color decorations",
+  "pla-pure": "Household items, gifts, everyday desk parts",
+  "pla-translucent": "Lamp shades, light diffusers, display parts",
+  "pla-gradient": "Vases, figures, color-shift decor",
+  "pla-silk-multi": "Vases, ornaments, multi-color decorations",
+  "pla-wood": "Decor, frames, wood-look models",
+  "pla-sparkle": "Decor, gifts, costume props",
+  "pla-marble": "Statues, vases, stone-look decor",
+  "pla-galaxy": "Decor, figures, sparkly gifts",
+  "pla-glow": "Signs, markers, night-time decor",
+  "pla-aero": "RC planes, light drone parts, light props",
+  "petg-translucent": "Light covers, diffusers, see-through boxes",
   "pla-metal": "Costume parts, trophies, metal-look props, tough decorations",
   "pla-tough": "Indoor boxes and cases, tool holders, drilling guides, parts that get dropped",
   petg: "Storage bins, bathroom holders, shelf supports, snap-on clips",
   "petg-cf": "Stiff indoor supports, machine covers, printer upgrade parts",
   abs: "Smooth-finished cases, hot indoor parts, car interior parts",
   asa: "Garden parts, balcony mounts, outdoor sensor cases, outside car parts",
-  "asa-cf": "Stiff outdoor supports, roof rack mounts, bike accessories",
+  "asa-cf": "Stiff outdoor covers, light outdoor supports, bike accessories",
   pc: "Heat-resistant cases, lamp parts, tough covers near warm electronics",
   "pet-cf": "Stiff parts for hot places, motor covers, parts for damp air",
   "paht-cf": "Motor mounts, supports near an engine, strong tool holders, gears",
@@ -575,7 +608,6 @@ const USES = {
   "abs-gf": "Stiff covers, warm indoor parts, rigid machine parts",
   "asa-aero": "RC planes, drone bodies, light outdoor parts",
   "petg-matte": "Clean-looking boxes, covers, household parts in warmer rooms",
-  tpu: "Phone cases, gaskets, grips, vibration feet, bumpers",
   "tpu-hf": "Quick flexible parts, phone cases, cable guards, bumpers",
   "tpu-ams": "Multi-color flexible parts, firm feet, tool grips",
   "tpu-90a": "Soft grips, straps, gaskets, wearable parts",
@@ -591,9 +623,9 @@ const WET_NOTE = (m) => {
 MATERIALS.concat(TPUS).forEach((m) => { m.wet = WET_NOTE(m); });
 const UV_NEED = { any: 0, indoors: 0, shade: 3, outdoors: 5 };
 MATERIALS.concat(TPUS).forEach((m) => { m.uvr = UV_SCORE[m.id]; m.accuracy = ACCURACY[m.id]; m.warp = WARP[m.id]; m.surface = SURFACE[m.id]; });
-const STRETCH = { "tpu-hf": 650, "tpu-ams": 650, "tpu-90a": 650, "tpu-85a": 700, pla: 12.2, "pla-cf": 8.4, "pla-matte": 32.8, "pla-silk": 2.8, "pla-silk-dual": 3.5, "pla-metal": 14.7, "pla-tough": 9.4, petg: 11.2, "petg-cf": 10.4, abs: 10.5, asa: 9.2, "asa-cf": 9.6, pc: 3.8, "pet-cf": 4.5, "paht-cf": 8.4, "pa6-cf": 5.8, tpu: 700, "abs-gf": 6.3, "pa6-gf": 3.9, "ppa-cf": 3.2, "pc-fr": 2.4, "asa-aero": 5.1, "petg-matte": 13.8 };
+const STRETCH = { "tpu-hf": 650, "tpu-ams": 650, "tpu-90a": 650, "tpu-85a": 700, pla: 12.2, "pla-cf": 8.4, "pla-matte": 32.8, "pla-silk": 2.8, "pla-metal": 14.7, "pla-tough": 9.4, petg: 9.5, "petg-cf": 10.4, abs: 10.5, asa: 9.2, "asa-cf": 9.6, pc: 3.8, "pet-cf": 4.5, "paht-cf": 8.4, "pa6-cf": 5.8, "abs-gf": 6.3, "pa6-gf": 3.9, "ppa-cf": 3.2, "pc-fr": 2.4, "asa-aero": 5.1, "petg-matte": 13.8, "pla-pure": 5.6, "pla-translucent": 11, "pla-gradient": 15.2, "pla-silk-multi": 3.5, "pla-wood": 15.3, "pla-sparkle": 11.7, "pla-marble": 6.7, "pla-galaxy": 9.3, "pla-glow": 8.6, "pla-aero": 2.6, "petg-translucent": 8.2 };
 MATERIALS.concat(TPUS).forEach((m) => { m.stretch = STRETCH[m.id]; });
-const SAG = { "pet-cf": 5, "paht-cf": 5, "asa-cf": 5, pc: 5, "petg-cf": 4, abs: 4, asa: 4, "pa6-cf": 4, petg: 3, "pla-cf": 3, "tpu-ams": 3, pla: 2, "pla-tough": 2, "pla-metal": 2, tpu: 2, "tpu-hf": 2, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 1, "tpu-90a": 1, "tpu-85a": 1, "abs-gf": 5, "pa6-gf": 4, "ppa-cf": 5, "pc-fr": 5, "asa-aero": 2, "petg-matte": 3 };
+const SAG = { "pet-cf": 5, "paht-cf": 5, "asa-cf": 5, pc: 5, "petg-cf": 4, abs: 4, asa: 4, "pa6-cf": 4, petg: 3, "pla-cf": 3, "tpu-ams": 3, pla: 2, "pla-tough": 2, "pla-metal": 2, "tpu-hf": 2, "pla-matte": 1, "pla-silk": 1, "tpu-90a": 1, "tpu-85a": 1, "abs-gf": 5, "pa6-gf": 4, "ppa-cf": 5, "pc-fr": 5, "asa-aero": 2, "petg-matte": 3, "pla-pure": 2, "pla-translucent": 2, "pla-gradient": 2, "pla-silk-multi": 1, "pla-wood": 1, "pla-sparkle": 1, "pla-marble": 2, "pla-galaxy": 1, "pla-glow": 2, "pla-aero": 1, "petg-translucent": 3 };
 const MIN_SAG = 3;
 const BEND_GROUP = { 1: "Low", 2: "Medium", 3: "High" };
 const bendGroup = (m) => {
@@ -630,7 +662,7 @@ const COL_TIPS = {
   layer: "How well the layers resist splitting on impact. Measured as Z impact strength, so slow pulling across layers can behave differently.",
   hdt: "Temperature where it starts to deform under a light load. Measured as HDT at 0.45 MPa on dried, annealed test bars.",
   stretch: "How far a test bar stretches before it breaks, measured as XY elongation at break. It doesn't prove a part springs back.",
-  bend: "How far it can bend before lasting damage, in rough groups. It's calculated from strength and stiffness, so it's a guide and not a safe limit. It doesn't cover repeated bending or months under load, and it doesn't show if a material is brittle.",
+  bend: "A rough comparison of how far materials flex, in groups. It's calculated from strength and stiffness, so it's not a measured or safe limit. It doesn't cover repeated bending or months under load, and it doesn't show if a material is brittle.",
   sag: "How well it resists slowly bending under a constant load over months, where 5 is best. This is my estimate, not lab data.",
   cost: "Rough price per kg, from under €25 to over €50.",
   ease: "How forgiving it is to print. This is my estimate, not lab data.",
@@ -653,10 +685,10 @@ function rankCmp(col) {
     if (va === null) return vb === null ? 0 : 1;
     if (vb === null) return -1;
     const gap = col.low ? va - vb : vb - va;
-    return gap || (col.id === "bend" ? b.tough - a.tough : 0);
+    return gap || (col.id === "bend" ? b.str / b.stiff - a.str / a.stiff : 0);
   };
 }
-const state = { colsOpen: false, mode: "any", place: "any", temp: 40, rank: "ease", styrene: false, nodry: false, noanneal: false, creep: false, damp: false, selected: null, cmp: [], view: "rank", units: "real", showOut: false, panelOpen: false, spring: false, maxCost: 5, cols: ["stiff", "str", "tough", "layer", "hdt", "ease", "cost"] };
+const state = { colsOpen: false, mode: "any", place: "any", temp: 40, rank: "ease", ams: false, styrene: false, nodry: false, noanneal: false, creep: false, damp: false, selected: null, cmp: [], view: "rank", units: "real", showOut: false, panelOpen: false, spring: false, maxCost: 5, cols: ["stiff", "str", "tough", "layer", "hdt", "ease", "cost"] };
 const MARGIN = 10;
 const NO_HEAT_LIMIT = 40;
 const $ = (id) => document.getElementById(id);
@@ -667,9 +699,10 @@ function reasonOut(m, s) {
   if (m.hdt === null && s.temp > NO_HEAT_LIMIT) return "No heat value published";
   if (m.hdt !== null && s.temp > NO_HEAT_LIMIT && m.hdt < s.temp + MARGIN) return "HDT " + m.hdt + " °C is too close to " + s.temp + " °C";
   if (m.cost > s.maxCost) return "Over your cost limit";
+  if (s.ams && m.noAms) return "Can't run through AMS";
   if (s.styrene && m.styrene) return "Emits styrene";
   if (s.nodry && m.dry === "Required") return "Must be dried first";
-  if (s.noanneal && m.anneal && s.temp > 60) return "Needs oven baking for this heat";
+  if (s.noanneal && m.anneal && s.temp > 60) return "Listed heat value needs oven baking";
   if (s.creep && m.sag < MIN_SAG) return "Sag resistance too low (" + m.sag + " of 5)";
   if (s.damp && m.wetSoft) return "Softens when damp";
   return "";
@@ -703,6 +736,7 @@ function fixes(s) {
   const add = (patch, label) => { const n = count(patch); if (n > 0) list.push({ patch, label: label + " (" + n + " " + (n === 1 ? "match" : "matches") + ")" }); };
   if (s.maxCost < 5) add({ maxCost: 5 }, "Remove the cost limit");
   if (s.spring) add({ spring: false }, "Allow stiffer materials");
+  if (s.ams) add({ ams: false }, "Allow filament without AMS");
   if (s.styrene) add({ styrene: false }, "Allow styrene");
   if (s.nodry) add({ nodry: false }, "Allow filament that needs drying");
   if (s.noanneal) add({ noanneal: false }, "Allow oven baking");
@@ -742,7 +776,7 @@ function bar(v, p, s, large) {
 }
 function chips(m, watchOnly) {
   const c = [];
-  if (m.anneal) c.push('<span class="chip">bake for top heat</span>');
+  if (m.anneal) c.push('<span class="chip">bake for full specs</span>');
   if (m.noAms) c.push('<span class="chip">no AMS</span>');
   if (!watchOnly) c.push('<span class="chip" title="Rough price">' + COST_BAND[m.cost] + "</span>");
   if (m.styrene) c.push('<span class="chip warn">styrene</span>');
@@ -769,7 +803,7 @@ function detailHtml(m, s) {
     const head = COL_GROUP[p.id] ? '<p class="stat-group">' + COL_GROUP[p.id] + "</p>" : "";
     return head + '<div class="stat' + (on ? " on" : "") + '"><span class="name" data-tip="' + p.id + '">' + p.name + (p.low ? "<small>Lower is better</small>" : "") + "</span>" + bar(m[p.id], p, s, true) + '<span class="num">' + (valueText(m, p, s) ?? (p.missing || "Not published")) + "</span></div>";
   }).join("");
-  const facts = [["Nozzle", m.nozzle], ["Nozzle temp", m.temp], ["Bed", m.bed], ["Drying", m.dry + ", " + m.dryAt], ["After getting wet", m.wet], ["Price band", COST_BAND[m.cost]]]
+  const facts = [["Nozzle", m.nozzle], ["Nozzle temp", m.temp], ["Bed", m.bed], ["Drying", m.dry + ", " + m.dryAt], ["If the filament gets wet", m.wet], ["Price band", COST_BAND[m.cost]]]
     .map(([k, v]) => "<div><dt>" + k + "</dt><dd>" + v + "</dd></div>").join("");
   return '<div class="detail"><p class="pick-why">' + m.why + '</p><p class="uses"><b>Great for</b><span>' + m.uses + '</span></p><p class="air' + (m.fume >= 4 ? " warn" : "") + '"><b>Fumes</b><span>' + m.air + '</span></p><div class="pick-body"><div class="stats">' + stats + '</div><dl class="facts">' + facts + "</dl></div></div>";
 }
@@ -779,7 +813,7 @@ function renderPick(res, s) {
   if (res.pass.length) { empty.hidden = true; return; }
   empty.hidden = false;
   const f = fixes(s);
-  f.push({ patch: { mode: "any", spring: false, place: "any", temp: NO_HEAT_LIMIT, maxCost: 5, styrene: false, nodry: false, noanneal: false, creep: false, damp: false }, label: "Clear all limits" });
+  f.push({ patch: { mode: "any", spring: false, place: "any", temp: NO_HEAT_LIMIT, maxCost: 5, ams: false, styrene: false, nodry: false, noanneal: false, creep: false, damp: false }, label: "Clear all limits" });
   empty.innerHTML = "<h2>No filament passes</h2><p>" + (f.length > 1 ? "These conditions rule out every material. Change one rule to get a match." : "These limits conflict, so no single change gives a match.") + "</p>" +
     '<div class="fixes">' + f.map((x, i) => '<button type="button" id="fix-' + i + '" data-fix="' + i + '">' + x.label + "</button>").join("") + "</div>";
   empty.querySelectorAll("[data-fix]").forEach((b) => b.addEventListener("click", () => { Object.assign(state, f[+b.dataset.fix].patch, { selected: null }); render(); }));
@@ -835,7 +869,7 @@ function compareList(res) {
 }
 
 function conditionText(m, res) {
-  if (res.pass.includes(m)) return "Passes";
+  if (res.pass.includes(m)) return state.mode === "flex" && (state.temp > NO_HEAT_LIMIT || state.place !== "any" || state.creep || state.damp) ? "Heat, sun, load, and damp not checked" : "Passes";
   const entry = res.out.find((o) => o.m === m);
   return entry ? entry.reason : "Flexible material";
 }
@@ -923,7 +957,7 @@ function renderCompare(res, s) {
     ["Nozzle temp", (m) => m.temp],
     ["Bed", (m) => m.bed],
     ["Drying", (m) => m.dry + ", " + m.dryAt],
-    ["After getting wet", (m) => m.wet],
+    ["If the filament gets wet", (m) => m.wet],
     ["Styrene-based", (m) => m.styrene ? "Yes" : "No"],
     ["Fumes", (m) => m.air]
   ].map(factRow).join("");
@@ -938,14 +972,14 @@ function renderCompare(res, s) {
   grid.classList.toggle("many", n > 2);
   grid.innerHTML = '<div class="vs-row head"><span class="vs-label"></span>' + list.map((m) => "<span>" + dot(m) + m.name + "</span>").join("") + "</div>" + groupRow("At a glance") + glance + stats + groupRow("Print setup") + facts;
   const said = list.filter((m) => leads.get(m).length).map((m) => m.name + " leads on " + joinWords(leads.get(m)) + ".");
-  const quiet = n === 2 ? list.filter((m) => !leads.get(m).length).map((m) => m.name + " has no clear lead.") : [];
+  const quiet = n === 2 ? list.filter((m) => !leads.get(m).length).map((m) => m.name + " has no clear lead on these measures.") : [];
   $("vs-summary").textContent = said.length ? said.concat(quiet).join(" ") : "These materials are too close to separate on the published numbers.";
   $("vs-hint").textContent = "Differences are measured against the baseline. Each tick marks another material's value, in that material's color, so the baseline's bar shows the others and their bars show the baseline. Gaps under 5%, or under 3 °C for heat, count as about even because test results vary." + (hasTpu ? " Toughness and layer bars use a wider scale here, to fit TPU." : "");
 }
 
 function conditionSummary(s) {
   if (s.mode === "flex") return "Rubbery part";
-  const rules = ["styrene", "nodry", "noanneal", "creep", "damp"].filter((k) => s[k]).length;
+  const rules = ["ams", "styrene", "nodry", "noanneal", "creep", "damp"].filter((k) => s[k]).length;
   const parts = [];
   if (s.spring) parts.push("Spring back");
   else if (s.mode === "rigid") parts.push("Rigid");
@@ -960,6 +994,7 @@ function conditionSummary(s) {
 function renderControls(s, res) {
   document.querySelectorAll(".rigid-only").forEach((el) => { el.hidden = s.mode === "flex"; });
   document.querySelectorAll("#mode button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === (s.spring ? "spring" : s.mode)));
+  $("mode-hint").textContent = MODE_HINT[s.spring ? "spring" : s.mode];
   document.querySelectorAll("#place button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === s.place));
   document.querySelectorAll("#colpick button").forEach((b) => {
     const on = s.cols.includes(b.dataset.v);
@@ -983,7 +1018,7 @@ function renderControls(s, res) {
   $("temp").value = s.temp;
   $("temp-out").textContent = s.temp > NO_HEAT_LIMIT ? s.temp + " °C" : "No heat limit";
   $("temp-out").classList.toggle("off", s.temp <= NO_HEAT_LIMIT);
-  ["styrene", "nodry", "noanneal", "creep", "damp"].forEach((k) => { $(k).checked = s[k]; });
+  ["ams", "styrene", "nodry", "noanneal", "creep", "damp"].forEach((k) => { $(k).checked = s[k]; });
 }
 
 function render() {
@@ -1051,6 +1086,8 @@ $("units").addEventListener("click", (e) => {
   state.units = b.dataset.v; render();
 });
 $("panel").addEventListener("submit", (e) => e.preventDefault());
+document.addEventListener("keydown", (e) => { if (e.key === "Tab") document.documentElement.classList.add("kbd"); });
+document.addEventListener("pointerdown", () => document.documentElement.classList.remove("kbd"));
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { $("col-tip").hidden = true; $("head-tip").hidden = true; } });
 document.documentElement.lang = "en";
 $("panel-toggle").addEventListener("click", () => { state.panelOpen = !state.panelOpen; render(); });
@@ -1058,6 +1095,12 @@ $("views").addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b) return;
   state.view = b.dataset.v; render();
 });
+const MODE_HINT = {
+  any: "Rigid holds its shape. Spring back bends and returns. Rubbery squashes or grips.",
+  rigid: "Holds its shape, like brackets, jigs, and mounts.",
+  spring: "Bends and returns, like clips, latches, and snap fits.",
+  flex: "Squashes or grips, like feet, bumpers, and gaskets."
+};
 const MODE_RANK = { rigid: "stiff", spring: "bend", flex: "ease" };
 $("mode").addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b) return;
@@ -1080,7 +1123,7 @@ $("presets").addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b) return;
   state.temp = +b.dataset.t; state.selected = null; render();
 });
-["styrene", "nodry", "noanneal", "creep", "damp"].forEach((k) => $(k).addEventListener("change", (e) => { state[k] = e.target.checked; state.selected = null; render(); }));
+["ams", "styrene", "nodry", "noanneal", "creep", "damp"].forEach((k) => $(k).addEventListener("change", (e) => { state[k] = e.target.checked; state.selected = null; render(); }));
 render();
 </script>
 
