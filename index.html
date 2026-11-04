@@ -329,12 +329,12 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--heat); }
       </fieldset>
 
       <fieldset class="group">
-        <legend>Highest cost</legend>
+        <legend>Max price</legend>
         <div class="seg" id="maxcost">
           <button type="button" id="cost-5" data-v="5">Any</button>
-          <button type="button" id="cost-1" data-v="1">~€20</button>
-          <button type="button" id="cost-2" data-v="2">~€30</button>
-          <button type="button" id="cost-3" data-v="3">~€40</button>
+          <button type="button" id="cost-1" data-v="1">≤ €25</button>
+          <button type="button" id="cost-2" data-v="2">≤ €35</button>
+          <button type="button" id="cost-3" data-v="3">≤ €50</button>
         </div>
         <p class="hint">Rough price per kg. Big Bambu sales can be much cheaper.</p>
       </fieldset>
@@ -503,7 +503,7 @@ const TPUS = [
 ];
 
 const COST = { "petg-hf": 2, "tpu-hf": 3, "tpu-ams": 3, "tpu-90a": 3, "tpu-85a": 3, pla: 1, "pla-matte": 1, "pla-silk": 1, "pla-silk-dual": 2, "pla-metal": 2, "pla-tough": 2, petg: 1, abs: 1, asa: 2, "pla-cf": 2, "petg-cf": 3, "asa-cf": 3, pc: 3, tpu: 3, "pa6-cf": 4, "pet-cf": 4, "paht-cf": 4 };
-const COST_BAND = { 1: "around €20/kg", 2: "around €30/kg", 3: "around €40/kg", 4: "around €100/kg" };
+const COST_BAND = { 1: "around €20/kg", 2: "around €30/kg", 3: "around €40/kg", 4: "€60+/kg" };
 MATERIALS.concat(TPUS).forEach((m) => { m.cost = COST[m.id]; });
 const costText = (m) => m.cost + " of 4, " + COST_BAND[m.cost];
 const OVERHANG = { "petg-hf": 70, "tpu-hf": 55, "tpu-ams": 70, "tpu-90a": 40, "tpu-85a": 40, pla: 55, "pla-cf": 55, "pla-matte": 55, "pla-silk": 55, "pla-silk-dual": 55, "pla-metal": 55, "pla-tough": 55, petg: 70, "petg-cf": 70, abs: 70, asa: 70, "asa-cf": 70, pc: 70, "pet-cf": 70, "paht-cf": 70, "pa6-cf": 70, tpu: 70 };
@@ -585,7 +585,7 @@ const COL_TIPS = {
   hdt: "Temperature where it starts to deform under a light load. Measured as HDT at 0.45 MPa on dried, annealed test bars.",
   stretch: "How far a test bar stretches before it breaks, measured as XY elongation at break. It doesn't prove a part springs back.",
   sag: "How well it resists slowly bending under a constant load over months, where 5 is best. This is my estimate, not lab data.",
-  cost: "Rough price per kg, from 1 at about €20 to 4 at about €100.",
+  cost: "Rough price per kg, from 1 at about €20 to 4 at €60 or more.",
   ease: "How forgiving it is to print. This is my estimate, not lab data.",
   accuracy: "How closely parts match their design size and fit together. This is my estimate, not lab data.",
   warp: "How well it resists lifting, bowing, and curling. This is my estimate, not lab data.",
@@ -900,7 +900,7 @@ function conditionSummary(s) {
   if (s.place === "shade") parts.push("Partial shade");
   if (s.place === "outdoors") parts.push("In the sun");
   if (s.temp > NO_HEAT_LIMIT) parts.push("up to " + s.temp + " °C");
-  if (s.maxCost < 5) parts.push("up to " + COST_BAND[s.maxCost].replace("around ", "~"));
+  if (s.maxCost < 5) parts.push("up to €" + { 1: 25, 2: 35, 3: 50 }[s.maxCost] + "/kg");
   if (rules) parts.push(rules + (rules === 1 ? " rule" : " rules") + " on");
   return parts.length ? parts.join(", ") : "No limits set";
 }
